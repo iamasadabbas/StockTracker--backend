@@ -5,7 +5,7 @@ This is the backend of the admin panel for the University Store Inventory Manage
 ## Contributors
 
 - [Asad Abbas](mailto:khanasad92332@gmail.com)
-- [Muneeb Ahmed](mailto:muneebabbasi026@gmail.com)
+- [Muneeb Ur Rehman](mailto:muneebabbasi026@gmail.com)
 - [Muhammad Khalil](mailto:iammalikkhalil@outlook.com)
 
 ## Features
