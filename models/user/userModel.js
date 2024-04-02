@@ -30,13 +30,16 @@ const userSchema = new mongoose.Schema(
     },
     designation_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "designation",
+      ref: "Designation",
       required: true,
     },
     role_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
       required: true,
+    },
+    gender:{
+    type:String
     },
     status: {
       type: Boolean,

@@ -74,7 +74,8 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 
   const user = await User.findOne({ email })
     .select("+password")
-    .populate("role_id");
+    .populate("role_id")
+    .populate("designation_id");
 
   if (!user) {
     res.json({ success: false, message: "Invalid email or password" });
@@ -255,7 +256,7 @@ exports.addDepartment = catchAsyncErrors(async (req, res, next) => {
   const { name, description } = req.body;
 
   try {
-     await Department.create({
+    await Department.create({
       name,
       description,
     });
