@@ -252,3 +252,23 @@ exports.updateUserRequestByIds=async(req,res)=>{
 
   res.send(result);
 }
+/// Product receiving
+exports.productReceiving = catchAsyncError(async (req, res, next) => {
+  try {
+    const result = await Request.updateOne(
+      { request_id: req.body.Id },
+      { $set: { status: "completed" } }
+    );
+    console.log(result);
+    if (result.modifiedCount === 1) {
+      // Successfully updated
+      res.status(200).json({ success: true });
+    } else {
+      // No document found matching the criteria
+      res.status(404).json({ success: false });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
