@@ -7,6 +7,7 @@ router.route("/addProduct").post(addProduct)
 router.route("/addProductType").post(addProductType)
 router.route("/addProductCompany").post(addProductCompany)
 router.route("/updateProductById/:_id").put(updateProductQuantity)
+router.route("/addLocation").post(addLocation);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -5,27 +5,17 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    product_code: {
-      type: String,
-    },
     specifications: {
       type: String,
+      required: true,
     },
     type_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductType",
       required: true,
     },
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-    },
     description: {
       type: String,
-    },
-    quantity: {
-      type: Number,
-      required: true,
     },
   },
   {
