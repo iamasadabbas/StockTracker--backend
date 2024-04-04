@@ -9,7 +9,8 @@ const {
     updateRequestStatus,
     getUserRequestById,
     updateUserRequestByIds,
-    getAllUserRequestedproduct } = require("../controllers/requestController");
+    getAllUserRequestedproduct, 
+    productReceiving} = require("../controllers/requestController");
 const router = express.Router();
 
 router.route("/getProductRequest/:user").get(getProductRequest)
@@ -21,5 +22,6 @@ router.route("/getRequestCategoryCount/:user").get(getRequestCategoryCount)
 router.route("/productRequest").post(productRequest);
 router.route("/getAllUserRequestedProduct").get(getAllUserRequestedproduct);
 router.route("/updateUserRequestedProductById/:request_id/:product_id").put(updateUserRequestByIds);
+router.route("/productReceiving").post(productReceiving)
 
 module.exports = router;
