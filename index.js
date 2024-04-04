@@ -9,6 +9,7 @@ const app = express();
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 
+
 const cors = require("cors");
 mongoose.set("strictQuery", false);
 

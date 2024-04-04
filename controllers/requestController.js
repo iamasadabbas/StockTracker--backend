@@ -230,6 +230,25 @@ exports.getRequestCategoryCount = catchAsyncError(async (req, res, next) => {
 //////////update request status/////////////////
 
 exports.updateRequestStatus = async (req, res) => {
-  let result = await Request.updateOne({ _id: req.params._id }, { $set: req.body });
+  let result = await Request.updateOne({ _id: req.params._id }, { $set:{ "status": req.body.status} });
   return res.send(result)
+}
+
+exports.getAllUserRequestedproduct=async(req,res)=>{
+  let result=await UserProduct.find();
+  res.send(result);
+}
+exports.updateUserRequestByIds=async(req,res)=>{
+  let result=await UserProduct.findOneAndUpdate({
+  "_id": req.params.request_id,
+  "product_id._id": req.params.product_id},
+  {
+    $set: {
+      "product_id.$.status": req.body.status,
+      "product_id.$.received_quantity": req.body.received_quantity
+    }
+  },
+  { new: true });
+
+  res.send(result);
 }
