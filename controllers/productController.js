@@ -12,7 +12,7 @@ const { sendMessage } = require("./notificationController");
 
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
-  const { name, specifications, type_id, location_id, description } = req.body;
+  const { name, specifications, type_id, location_id, description,quantity } = req.body;
 
   try {
     const product = await Product.create({
@@ -26,6 +26,7 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
       const productLocation = await ProductLocation.create({
         product_id: product._id,
         location_id: location_id,
+        quantity
       });
 
       if (productLocation) {
@@ -110,9 +111,7 @@ exports.getAllProduct = catchAsyncError(async (req, res, next) => {
   try {
     const id = req.params.id;
     console.log(id);
-    const product = await Product.find({ type_id: id })
-      .populate("company_id")
-      .populate("type_id");
+    const product = await Product.find({ type_id: id }).populate("type_id");
     console.log(product);
     if (product == "") {
       res.json({ success: false, product: "No Item Found" });
@@ -144,7 +143,7 @@ exports.getProductCompany = catchAsyncError(async (req, res, next) => {
     }
   } catch (error) {
     res.send({
-      status: 200,
+      status: 400,
       message: "Error",
     });
   }
