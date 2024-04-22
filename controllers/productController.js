@@ -12,36 +12,24 @@ const { sendMessage } = require("./notificationController");
 
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
-  const { name, specifications, type_id, location_id, description,quantity } = req.body;
+  const { name, specifications, type_id, description, company_id } = req.body;
 
   try {
     const product = await Product.create({
       name,
       specifications,
       type_id,
+      company_id,
       description,
     });
 
     if (product) {
-      const productLocation = await ProductLocation.create({
-        product_id: product._id,
-        location_id: location_id,
-        quantity
+      return res.status(200).json({
+        success: true,
+        message: "Product added successfully.",
       });
-
-      if (productLocation) {
-        return res.status(200).json({
-          success: true,
-          message: "Product added successfully.",
-        });
-      } else {
-        return res.status(500).json({
-          success: false,
-          error: "Failed to add product location.",
-        });
-      }
     } else {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
         error: "Failed to add product.",
       });
