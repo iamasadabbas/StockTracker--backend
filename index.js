@@ -49,11 +49,17 @@ const user = require("./routes/userRouter");
 const product = require("./routes/productRouter");
 const request = require("./routes/requestRouter");
 const notification = require("./routes/notificationRouter");
+const productLocation = require("./routes/productLocationRouter");
+const demandProduct =require("./routes/demandRouter");
+const location=require("./routes/locationRouter")
 
 app.use("/user", user);
 app.use("/product", product);
 app.use("/request", request);
 app.use("/notification", notification);
+app.use("/productLocation", productLocation);
+app.use("/demand", demandProduct);
+app.use("/location", location);
 
 //middleware
 app.use(errorMiddleware);

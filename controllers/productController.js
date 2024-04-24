@@ -12,7 +12,8 @@ const { sendMessage } = require("./notificationController");
 
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
-  const { name, specifications, type_id, location_id, description,quantity } = req.body;
+  // const { name, specifications, type_id, location_id, description,quantity } = req.body;
+  const { name, specifications, type_id, description } = req.body;
 
   try {
     const product = await Product.create({
@@ -21,31 +22,34 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
       type_id,
       description,
     });
-
-    if (product) {
-      const productLocation = await ProductLocation.create({
-        product_id: product._id,
-        location_id: location_id,
-        quantity
-      });
-
-      if (productLocation) {
-        return res.status(200).json({
-          success: true,
-          message: "Product added successfully.",
-        });
-      } else {
-        return res.status(500).json({
-          success: false,
-          error: "Failed to add product location.",
-        });
-      }
-    } else {
-      return res.status(500).json({
-        success: false,
-        error: "Failed to add product.",
-      });
+    if(product){
+      res.send( {status:200,product});
     }
+
+    // if (product) {
+    //   const productLocation = await ProductLocation.create({
+    //     product_id: product._id,
+    //     location_id: location_id,
+    //     quantity
+    //   });
+
+      // if (productLocation) {
+      //   return res.status(200).json({
+      //     success: true,
+      //     message: "Product added successfully.",
+      //   });
+      // } else {
+      //   return res.status(500).json({
+      //     success: false,
+      //     error: "Failed to add product location.",
+      //   });
+      // }
+    // } else {
+    //   return res.status(500).json({
+    //     success: false,
+    //     error: "Failed to add product.",
+    //   });
+    // }
   } catch (error) {
     // Handle errors here
     console.error(error);
@@ -107,7 +111,7 @@ exports.addProductCompany = catchAsyncError(async (req, res, next) => {
 
 // Get All Product
 /////////////////////////////////////////////////////////////////////////////////////////////
-exports.getAllProduct = catchAsyncError(async (req, res, next) => {
+exports.getAllProductById = catchAsyncError(async (req, res, next) => {
   try {
     const id = req.params.id;
     console.log(id);
@@ -118,6 +122,22 @@ exports.getAllProduct = catchAsyncError(async (req, res, next) => {
     } else {
       res.status(200).json({
         success: true,
+        product,
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+    });
+  }
+});
+exports.getAllProduct = catchAsyncError(async (req, res, next) => {
+  try {
+    const product = await Product.find();
+    if (product == "") {
+      res.json({ success: false, product: "No Item Found" });
+    } else {
+      res.send({
         product,
       });
     }

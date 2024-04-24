@@ -6,7 +6,6 @@ const Request = require("../models/request/productRequestModel");
 const UserProduct = require("../models/request/userProductModel");
 const ProductType = require("../models/product/productTypeModel");
 const { sendMessage } = require("./notificationController");
-const { request } = require("express");
 
 // get Product Request
 /////////////////////////////////////////////////////////////////////////////////////////////

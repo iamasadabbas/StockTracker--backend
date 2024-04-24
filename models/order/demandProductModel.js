@@ -14,10 +14,6 @@ const demandProductSchema = new mongoose.Schema(
         },
       },
     ],
-    quantity: {
-      type: Number,
-      required: true,
-    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -25,6 +21,7 @@ const demandProductSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Pending", "Approved"],
+      default: "Pending"
     },
   },
   {
