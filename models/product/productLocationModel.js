@@ -15,4 +15,4 @@ const productLoactionSchema = new mongoose.Schema({
     default:0
   },
 });
-module.exports = mongoose.model("Product_Loaction", productLoactionSchema);
+module.exports = mongoose.model("Product_Location", productLoactionSchema);

@@ -6,6 +6,7 @@ const Request = require("../models/request/productRequestModel");
 const UserProduct = require("../models/request/userProductModel");
 const ProductType = require("../models/product/productTypeModel");
 const { sendMessage } = require("./notificationController");
+const { request } = require("express");
 
 // get Product Request
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,9 +230,24 @@ exports.getRequestCategoryCount = catchAsyncError(async (req, res, next) => {
 //////////update request status/////////////////
 
 exports.updateRequestStatus = async (req, res) => {
-  let result = await Request.updateOne({ _id: req.params._id }, { $set:{ "status": req.body.status} });
-  return res.send(result)
-}
+  try {
+    // Update the specific request
+    let updatedRequest = await Request.findOneAndUpdate(
+      { request_id: req.params.request_id },
+      { $set: { status: req.body.status } },
+      { new: true } // This option returns the updated document
+    );
+
+    // Fetch all requests with the updated status
+    let requestsWithUpdatedStatus = await Request.find().populate('user_id');
+
+    // Send the fetched requests as the response
+    res.send(requestsWithUpdatedStatus);
+  } catch (error) {
+    // Handle any errors
+    res.status(500).send({ error: 'An error occurred while updating the request status' });
+  }
+};
 
 exports.getAllUserRequestedproduct=async(req,res)=>{
   let result=await UserProduct.find();
@@ -249,7 +265,7 @@ exports.updateUserRequestByIds=async(req,res)=>{
   },
   { new: true });
 
-  res.send(result);
+  res.status(200).send(result);
 }
 /// Product receiving
 exports.productReceiving = catchAsyncError(async (req, res, next) => {
@@ -271,3 +287,13 @@ exports.productReceiving = catchAsyncError(async (req, res, next) => {
   }
 });
 
+
+exports.getRequestedProduct = catchAsyncError(async (req, res) => {
+  const request_id = req.params.request_id;
+  const request=await UserProduct.findOne({_id:request_id}).populate("product_id._id")
+
+  res.send({
+    success: true,
+    request
+  })
+})

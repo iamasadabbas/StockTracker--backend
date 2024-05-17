@@ -28,7 +28,7 @@ exports.getProductLocationById = catchAsyncError(async (req, res, next) => {
         const { product_id } = req.params;
         const { quantity } = req.body;
 
-        let result = await productLocation.findOne({ product_id });
+        let result = await productLocation.findOne({ product_id })
 
         if (!result) {
             return res.status(404).send("Product not found");

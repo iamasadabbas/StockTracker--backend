@@ -1,3 +1,4 @@
+const { string, ref } = require("joi");
 const mongoose = require("mongoose");
 const demandProductSchema = new mongoose.Schema(
   {
@@ -14,6 +15,20 @@ const demandProductSchema = new mongoose.Schema(
         },
       },
     ],
+    subject: {
+      type: String,
+    },
+    applicationId: {
+      type: String,
+    },
+
+    date: {
+      type: String,
+    },
+    locationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'location'
+    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
