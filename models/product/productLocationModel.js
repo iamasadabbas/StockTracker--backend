@@ -10,9 +10,13 @@ const productLoactionSchema = new mongoose.Schema({
     ref: "Product",
     required: true,
   },
+  company_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+  },
   quantity: {
     type: Number,
-    default:0
+    default: 0,
   },
 });
 module.exports = mongoose.model("Product_Location", productLoactionSchema);
