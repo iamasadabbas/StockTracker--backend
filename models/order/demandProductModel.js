@@ -1,3 +1,4 @@
+const { string, ref } = require("joi");
 const mongoose = require("mongoose");
 const demandProductSchema = new mongoose.Schema(
   {
@@ -14,9 +15,19 @@ const demandProductSchema = new mongoose.Schema(
         },
       },
     ],
-    quantity: {
-      type: Number,
-      required: true,
+    subject: {
+      type: String,
+    },
+    applicationId: {
+      type: String,
+    },
+
+    date: {
+      type: String,
+    },
+    locationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'location'
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -25,6 +36,7 @@ const demandProductSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Pending", "Approved"],
+      default: "Pending"
     },
   },
   {
