@@ -22,29 +22,29 @@ exports.saveToken = catchAsyncErrors(async (req, res, next) => {
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-exports.sendMessage = catchAsyncErrors(async (title,message) => {
-  console.log("function called");
+exports.sendMessage = catchAsyncErrors(async (user_id, title, message) => {
+  console.log(user_id, title, message);
   try {
     // Fetch tokens from MongoDB based on userId
     const tokens = await Token.find().distinct("token");
+    console.log(tokens);
     // Send FCM message
     await admin.messaging().sendMulticast({
       tokens,
       data: {
         notifee: JSON.stringify({
-          title: "Muneeb Ur Rehman",
-          body: "Request created successfully.",
+          title: title,
+          body: message,
           android: {
             channelId: "default",
             pressAction: {
-              id: 'default',
+              id: "default",
             },
             // Add more Notifee notification options as needed
           },
         }),
       },
     });
-   
   } catch (error) {
     console.log(error);
   }
