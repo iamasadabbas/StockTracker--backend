@@ -13,6 +13,9 @@ const productRequestSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    comment: {
+      type: String,
+    },
     status: {
       type: String,
       enum: ["waiting", "processing", "receiving", "completed", "rejected"],

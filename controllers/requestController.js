@@ -96,7 +96,7 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.productRequest = catchAsyncError(async (req, res, next) => {
-  const { user_id, product_id } = req.body;
+  const { user_id, product_id, comment } = req.body;
   console.log(req.body);
 
   // Generate a unique request number
@@ -123,6 +123,7 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
       request_id: userProduct._id,
       user_id,
       request_number: requestNumber,
+      comment,
     });
 
     if (request) {

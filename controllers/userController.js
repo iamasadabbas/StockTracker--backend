@@ -24,6 +24,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     faculty_id,
     status,
   } = req.body;
+  console.log(req.body);
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
     // Create new user
@@ -79,6 +80,11 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 
   if (!user) {
     res.json({ success: false, message: "Invalid email or password" });
+  } else if (!user.role_id) {
+    res.json({
+      success: false,
+      message: "Role not assigned",
+    });
   }
   const validPass = await bcrypt.compare(req.body.password, user.password);
   if (!validPass) {
