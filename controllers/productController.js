@@ -9,6 +9,7 @@ const Location = require("../models/product/locationModel");
 
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
+
   // const { name, specifications, type_id, location_id, description,quantity } = req.body;
   const { name, specifications, type_id, description } = req.body;
 
@@ -27,8 +28,10 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
       name,
       specifications,
       type_id,
+      company_id,
       description,
     });
+
     if(product){
       res.send( {
         status:200,
