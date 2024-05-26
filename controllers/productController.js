@@ -3,10 +3,7 @@ const catchAsyncError = require("../middlewares/catchAsyncError");
 const Product = require("../models/product/productModel");
 const ProductType = require("../models/product/productTypeModel");
 const ProductCompany = require("../models/product/productCompanyModel");
-const ProductRequest = require("../models/request/productRequestModel");
 const Location = require("../models/product/locationModel");
-const ProductLocation = require("../models/product/productLocationModel");
-const { sendMessage } = require("./notificationController");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,7 +12,17 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
   // const { name, specifications, type_id, location_id, description,quantity } = req.body;
   const { name, specifications, type_id, description } = req.body;
 
+
   try {
+    // const alreadyExist=await Product.findOne({name:name})
+    // if(alreadyExist){
+    //   res.send({
+    //     status:409,
+    //     message:"Product Already Exists",
+    //   })
+    // }else {
+
+    
     const product = await Product.create({
       name,
       specifications,
@@ -23,8 +30,12 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
       description,
     });
     if(product){
-      res.send( {status:200,product});
+      res.send( {
+        status:200,
+        message:"Product created successfully"
+      });
     }
+  // }
 
     // if (product) {
     //   const productLocation = await ProductLocation.create({
@@ -65,22 +76,26 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
 exports.addProductType = catchAsyncError(async (req, res, next) => {
   const { name } = req.body;
 
-  // console.log(req.body);
-  const productTypeExists = await ProductType.findOne({ name: name });
   try {
-    // console.log(productTypeExists);
-    if (productTypeExists) {
-      res.send({ status: 409 });
-    } else {
       const product = await ProductType.create({
         name,
       });
-      res.send({ status: 200, message: "Product Type Add Successfully" });
+      if(product){
+        res.send({ status: 200, message: "Product Type Add Successfully" });
+      }
     }
-  } catch (error) {
-    console.log(error);
+   catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyValue) {
+      const duplicateField = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        status: 409,
+        message: `Duplicate ${duplicateField}: ${error.keyValue[duplicateField]}`,
+      });
+    } else {
+      res.status(500).json({ status: 500, error: "Internal server error" });
+    }
   }
-});
+})
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Add Product Company

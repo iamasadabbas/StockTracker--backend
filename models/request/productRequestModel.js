@@ -6,7 +6,7 @@ const productRequestSchema = new mongoose.Schema(
       ref: "User_Product",
     },
     request_number: {
-      type: Number,
+      type: String,
       required: true,
     },
     user_id: {
