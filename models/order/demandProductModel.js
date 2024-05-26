@@ -13,6 +13,10 @@ const demandProductSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        received_quantity: {
+          type: Number,
+          default:null
+        },
       },
     ],
     subject: {
@@ -33,9 +37,13 @@ const demandProductSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    signatureRecord_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "signatureRecord",
+    },
     status: {
       type: String,
-      enum: ["Pending", "Approved"],
+      enum: ["Pending", "Approved","Partial Approved"],
       default: "Pending"
     },
   },

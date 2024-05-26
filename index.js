@@ -52,6 +52,7 @@ const notification = require("./routes/notificationRouter");
 const productLocation = require("./routes/productLocationRouter");
 const demandProduct =require("./routes/demandRouter");
 const location=require("./routes/locationRouter")
+const signatureRecord=require("./routes/signatureRecordRouter")
 
 app.use("/user", user);
 app.use("/product", product);
@@ -60,6 +61,7 @@ app.use("/notification", notification);
 app.use("/productLocation", productLocation);
 app.use("/demand", demandProduct);
 app.use("/location", location);
+app.use("/signatureRecord", signatureRecord);
 
 //middleware
 app.use(errorMiddleware);

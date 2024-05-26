@@ -6,7 +6,7 @@ const Request = require("../models/request/productRequestModel");
 const UserProduct = require("../models/request/userProductModel");
 const ProductType = require("../models/product/productTypeModel");
 const { sendMessage } = require("./notificationController");
-const { request } = require("express");
+const { request, response } = require("express");
 
 // get Product Request
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,11 +70,10 @@ exports.getProductRequestByRequestId = catchAsyncError(
 ////////////getAll product request//////////////
 exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
   try {
-    // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
     const request = await Request.find()
-      .populate("user_id")
-      .populate({
-        path: "request_id",
+    .populate("user_id")
+    .populate({
+      path: "request_id",
         populate: {
           path: "product_id._id",
           model: "Product",
@@ -82,10 +81,81 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
         },
       })
       .sort({ "date.getMonth()": 1 });
+      console.log(request)
     if (request.length != 0) {
+      console.log(request);
       res.status(200).json({
         success: true,
         request,
+      });
+    }
+  } catch (error) {
+    console.log("error is " + error);
+  }
+});
+
+
+exports.getLast7daysProductRequest = catchAsyncError(async (req, res, next) => {
+    try {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
+
+        let NoOfRequest = [];
+
+        for (let index = 0; index < 7; index++) {
+            const startOfDay = new Date(today);
+            startOfDay.setUTCDate(today.getUTCDate() - index);
+            // console.log('Start of Day:', startOfDay);
+
+            const endOfDay = new Date(startOfDay);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+            // console.log('End of Day:', endOfDay);
+
+            const requests = await Request.find({
+                createdAt: {
+                    $gte: startOfDay,
+                    $lte: endOfDay
+                }
+            });
+            console.log(`Requests on day ${index}:`, requests.length);
+            NoOfRequest.push(requests.length);
+        }
+
+        res.send({
+            status: 200,
+            requestCounts: NoOfRequest.reverse(), // Reverse the array to get the counts in chronological order
+        });
+    } catch (error) {
+        console.error('Error finding requests:', error);
+        res.status(500).send({
+            message: 'Internal server error',
+        });
+    }
+});
+
+
+
+
+
+exports.getWaitingProductRequest = catchAsyncError(async (req, res, next) => {
+
+  try {
+    // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
+    const request = await Request.find({ status: 'waiting' }).populate("user_id")
+    .populate({
+      path: "request_id",
+      populate: {
+        path: "product_id._id",
+        model: "Product",
+        populate: { path: "type_id", model: "ProductType" }, // Populate type_id
+      },
+    })
+    if (request.length != 0) {
+      const waitingRequestCount = request.length
+      res.status(200).json({
+        success: true,
+        waitingRequestCount,
+        request
       });
     }
   } catch (error) {
@@ -254,22 +324,22 @@ exports.updateRequestStatus = async (req, res) => {
 
 exports.getAllUserRequestedproduct = async (req, res) => {
   let result = await UserProduct.find();
+exports.getAllUserRequestedproduct = async (req, res) => {
+  let result = await UserProduct.find();
   res.send(result);
-};
+}
 exports.updateUserRequestByIds = async (req, res) => {
-  let result = await UserProduct.findOneAndUpdate(
-    {
-      _id: req.params.request_id,
-      "product_id._id": req.params.product_id,
-    },
+  let result = await UserProduct.findOneAndUpdate({
+    "_id": req.params.request_id,
+    "product_id._id": req.params.product_id
+  },
     {
       $set: {
         "product_id.$.status": req.body.status,
-        "product_id.$.received_quantity": req.body.received_quantity,
-      },
+        "product_id.$.received_quantity": req.body.received_quantity
+      }
     },
-    { new: true }
-  );
+    { new: true });
 
   res.status(200).send(result);
 };
@@ -295,12 +365,11 @@ exports.productReceiving = catchAsyncError(async (req, res, next) => {
 
 exports.getRequestedProduct = catchAsyncError(async (req, res) => {
   const request_id = req.params.request_id;
-  const request = await UserProduct.findOne({ _id: request_id }).populate(
-    "product_id._id"
-  );
+  const request = await UserProduct.findOne({ _id: request_id }).populate("product_id._id")
 
   res.send({
     success: true,
-    request,
+    request
   });
-});
+})
+}

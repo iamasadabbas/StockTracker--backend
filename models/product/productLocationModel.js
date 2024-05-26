@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const productLoactionSchema = new mongoose.Schema({
+const productLocationSchema = new mongoose.Schema({
   location_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Location",
@@ -19,4 +19,4 @@ const productLoactionSchema = new mongoose.Schema({
     default: 0,
   },
 });
-module.exports = mongoose.model("Product_Location", productLoactionSchema);
+module.exports = mongoose.model("Product_Location", productLocationSchema);

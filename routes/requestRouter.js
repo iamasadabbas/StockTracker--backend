@@ -11,7 +11,10 @@ const {
     getRequestedProduct,
     updateUserRequestByIds,
     getAllUserRequestedproduct, 
-    productReceiving} = require("../controllers/requestController");
+    getWaitingProductRequest,
+    productReceiving,
+    getLast7daysProductRequest
+} = require("../controllers/requestController");
 const router = express.Router();
 
 router.route("/getProductRequest/:user").get(getProductRequest)
@@ -25,5 +28,7 @@ router.route("/getAllUserRequestedProduct").get(getAllUserRequestedproduct);
 router.route("/updateUserRequestedProductById/:request_id/:product_id").put(updateUserRequestByIds);
 router.route("/productReceiving").post(productReceiving)
 router.route("/requestedProduct/:request_id").get(getRequestedProduct)
+router.route("/getWaitingProductRequest").get(getWaitingProductRequest)
+router.route("/getLast7daysProductRequest").get(getLast7daysProductRequest)
 
 module.exports = router;
