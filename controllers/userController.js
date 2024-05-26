@@ -80,7 +80,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
 
   if (!user) {
     res.json({ success: false, message: "Invalid email or password" });
-  } else if (!user.role_id) {
+  } else if (user?.role_id == null) {
     res.json({
       success: false,
       message: "Role not assigned",
@@ -287,22 +287,20 @@ exports.addDesignation = catchAsyncErrors(async (req, res, next) => {
       name,
       description,
     });
-if(task){
-  res.send({
-    status: 200,
-    message: "Designation created successfully",
-  });
-}
-   
-  }
-  catch (error) {
+    if (task) {
+      res.send({
+        status: 200,
+        message: "Designation created successfully",
+      });
+    }
+  } catch (error) {
     if (error.code == 11000) {
       res.status(409).json({
         message: "Designation Already Register",
       });
     }
   }
-})
+});
 // });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -416,10 +414,11 @@ exports.updateAssignTask = catchAsyncErrors(async (req, res, next) => {
     }
   ).populate("task_id");
   if (result) {
-    const data = await RoleTask.findOne({ role_id: req.params.role_id }).populate('task_id.task_id');
+    const data = await RoleTask.findOne({
+      role_id: req.params.role_id,
+    }).populate("task_id.task_id");
     return res.send(data);
   }
-
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -432,7 +431,7 @@ exports.removeRoleTask = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({
       success: true,
     });
-  } catch (error) { }
+  } catch (error) {}
 });
 
 /////// remove User ///////////
@@ -443,7 +442,7 @@ exports.removeUser = catchAsyncErrors(async (req, res, next) => {
     if (result) {
       res.send({
         status: 200,
-        message: 'User deleted successfully'
+        message: "User deleted successfully",
       });
     }
   } catch (error) {

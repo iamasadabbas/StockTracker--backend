@@ -9,10 +9,8 @@ const Location = require("../models/product/locationModel");
 
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
-
   // const { name, specifications, type_id, location_id, description,quantity } = req.body;
   const { name, specifications, type_id, description } = req.body;
-
 
   try {
     // const alreadyExist=await Product.findOne({name:name})
@@ -23,7 +21,6 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
     //   })
     // }else {
 
-    
     const product = await Product.create({
       name,
       specifications,
@@ -32,13 +29,13 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
       description,
     });
 
-    if(product){
-      res.send( {
-        status:200,
-        message:"Product created successfully"
+    if (product) {
+      res.send({
+        status: 200,
+        message: "Product created successfully",
       });
     }
-  // }
+    // }
 
     // if (product) {
     //   const productLocation = await ProductLocation.create({
@@ -47,17 +44,17 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
     //     quantity
     //   });
 
-      // if (productLocation) {
-      //   return res.status(200).json({
-      //     success: true,
-      //     message: "Product added successfully.",
-      //   });
-      // } else {
-      //   return res.status(500).json({
-      //     success: false,
-      //     error: "Failed to add product location.",
-      //   });
-      // }
+    // if (productLocation) {
+    //   return res.status(200).json({
+    //     success: true,
+    //     message: "Product added successfully.",
+    //   });
+    // } else {
+    //   return res.status(500).json({
+    //     success: false,
+    //     error: "Failed to add product location.",
+    //   });
+    // }
     // } else {
     //   return res.status(500).json({
     //     success: false,
@@ -80,14 +77,13 @@ exports.addProductType = catchAsyncError(async (req, res, next) => {
   const { name } = req.body;
 
   try {
-      const product = await ProductType.create({
-        name,
-      });
-      if(product){
-        res.send({ status: 200, message: "Product Type Add Successfully" });
-      }
+    const product = await ProductType.create({
+      name,
+    });
+    if (product) {
+      res.send({ status: 200, message: "Product Type Add Successfully" });
     }
-   catch (error) {
+  } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyValue) {
       const duplicateField = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
@@ -98,7 +94,7 @@ exports.addProductType = catchAsyncError(async (req, res, next) => {
       res.status(500).json({ status: 500, error: "Internal server error" });
     }
   }
-})
+});
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Add Product Company

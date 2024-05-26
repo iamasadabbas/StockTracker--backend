@@ -7,13 +7,13 @@ const {
     getAllProductRequest,
     getProductRequestByRequestId,
     updateRequestStatus,
-    getUserRequestById,
     getRequestedProduct,
     updateUserRequestByIds,
     getAllUserRequestedproduct, 
     getWaitingProductRequest,
     productReceiving,
-    getLast7daysProductRequest
+    getLast7daysProductRequest,
+  
 } = require("../controllers/requestController");
 const router = express.Router();
 
