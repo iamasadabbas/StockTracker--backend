@@ -23,6 +23,32 @@ exports.getProductLocationById = catchAsyncError(async (req, res, next) => {
       console.log(error);
     }
   });
+
+  exports.getTotalProductCount = catchAsyncError(async (req, res, next) => {
+    try {
+      const request = await productLocation.find()
+      console.log(request);
+      if (request.length != 0) {
+        
+        console.log('enter');
+        let lowStockProduct=0;
+        let outOfStockProduct=0;
+        request.map(item=>{
+          if(item.quantity < 5){
+            lowStockProduct++
+          }else if(item.quantity === 0){
+            outOfStockProduct++
+          }
+        })
+        const productCount=request.length
+        console.log(productCount);
+        res.send({status:200,productCount,lowStockProduct,outOfStockProduct})
+        
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
   exports.updateAvailableQuantity = async (req, res) => {
     try {
         const { product_id } = req.params;
@@ -38,7 +64,10 @@ exports.getProductLocationById = catchAsyncError(async (req, res, next) => {
         result.quantity = quantity;
         await result.save();
 
-        return res.send(result);
+        return res.send({
+          message:"Success",
+          result
+        });
     } catch (error) {
         console.error("Error updating available quantity:", error);
         return res.status(500).send("Internal Server Error");

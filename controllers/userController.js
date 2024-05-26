@@ -140,27 +140,25 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.addTask = catchAsyncErrors(async (req, res, next) => {
   const { name, description } = req.body;
-  // console.log(req.body);
+
   try {
     await Task.create({
       name,
       description,
     });
 
-    res.send({
+    res.status(200).send({
       status: 200,
       message: "Task Add Successfully",
     });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyValue) {
       const duplicateField = Object.keys(error.keyPattern)[0];
-      return res.status(409).json({
+      return res.status(409).send({
         status: 409,
         message: `Duplicate ${duplicateField}: ${error.keyValue[duplicateField]}`,
       });
     } else {
-      // Other errors
-      console.error("Error registering user:", error);
       res.status(500).json({ status: 500, error: "Internal server error" });
     }
   }
@@ -233,7 +231,7 @@ exports.addRole = catchAsyncErrors(async (req, res, next) => {
       const duplicateField = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
         status: 409,
-        message: `Duplicate ${duplicateField}: ${error.keyValue[duplicateField]}`,
+        error: `Role Already Exists`,
       });
     } else {
       console.error("Error registering Role:", error);
@@ -285,31 +283,27 @@ exports.addDesignation = catchAsyncErrors(async (req, res, next) => {
   const { name, description } = req.body;
 
   try {
-    const designationExists = await designationModel.findOne({ name: name });
-    if (designationExists) {
-      res.send({
-        status: 409,
-        message: "Designation already exists",
-      });
-    } else {
-      const task = await designationModel.create({
-        name,
-        description,
-      });
-
-      res.send({
-        status: 200,
-        message: "Designation created successfully",
-      });
-    }
-  } catch (error) {
+    const task = await designationModel.create({
+      name,
+      description,
+    });
+if(task){
+  res.send({
+    status: 200,
+    message: "Designation created successfully",
+  });
+}
+   
+  }
+  catch (error) {
     if (error.code == 11000) {
-      res.status(400).json({
+      res.status(409).json({
         message: "Designation Already Register",
       });
     }
   }
-});
+})
+// });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -421,8 +415,11 @@ exports.updateAssignTask = catchAsyncErrors(async (req, res, next) => {
       },
     }
   ).populate("task_id");
+  if (result) {
+    const data = await RoleTask.findOne({ role_id: req.params.role_id }).populate('task_id.task_id');
+    return res.send(data);
+  }
 
-  return res.send(result);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -435,17 +432,20 @@ exports.removeRoleTask = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({
       success: true,
     });
-  } catch (error) {}
+  } catch (error) { }
 });
 
 /////// remove User ///////////
 exports.removeUser = catchAsyncErrors(async (req, res, next) => {
   const { user_id } = req.params.user_id;
   try {
-    await User.deleteOne({ user_id });
-    res.send({
-      status: 200,
-    });
+    const result = await User.deleteOne({ user_id });
+    if (result) {
+      res.send({
+        status: 200,
+        message: 'User deleted successfully'
+      });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -475,7 +475,7 @@ exports.getRoleTask = catchAsyncErrors(async (req, res, next) => {
     const role_id = req.params.role_id;
     const taskData = await RoleTask.find({ role_id })
       .populate("role_id")
-      .populate("task_id");
+      .populate("task_id.task_id");
 
     if (taskData.length != 0) {
       res.json(taskData);
