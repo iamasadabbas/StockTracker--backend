@@ -28,7 +28,7 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
       name,
       specifications,
       type_id,
-      company_id,
+      // company_id,
       description,
     });
 

@@ -20,7 +20,17 @@ const {
   addDesignation,
   getDesignation,
   removeUser,
+  getRegistartionRequest,
   editUser,
+  updateUserStatus,
+  getTotalUserCount,
+  getTotalActiveUserCount,
+  getTotalRoleCount,
+  updateRole,
+  getUserApprovalRequest,
+  getLast7daysUserApproval,
+  getUserDetails,
+  logout
 } = require("../controllers/userController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
 const upload = require("../middlewares/ImageUploader");
@@ -31,6 +41,7 @@ const router = express.Router();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.route("/loginUser").post(loginUser);
+router.route("/logout").post(logout);
 router.route("/registerUser").post(registerUser);
 router.route("/addDepartment").post(addDepartment);
 router.route("/addDesignation").post(addDesignation);
@@ -42,13 +53,17 @@ router.route("/addFaculty").post(controller.addFaculty);
 
 ///////////update Assign task
 router.route("/updateAssignRoleTask/:role_id/:task_id").put(updateAssignTask);
+router.route("/updateRole").put(updateRole);
+router.route("/updateUserStatus").put(updateUserStatus);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Get Route
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+router.route("/me").get(isAuthenticatedUser,getUserDetails);
 router.route("/getAllUser").get(getAllUser);
+router.route("/getRegistartionRequest").get(getRegistartionRequest);
 router.route("/getRole").get(getRole);
 router.route("/getDepartment/:id").get(getDepartment);
 router.route("/getDesignation").get(getDesignation);
@@ -56,6 +71,11 @@ router.route("/getFaculty").get(controller.getFaculty);
 router.route("/getAllTask").get(getAllTask);
 router.route("/getRoleTask/:role_id").get(getRoleTask);
 router.route("/getSpecificTask/:role_id").get(getSpecificTask);
+router.route("/getTotalUserCount").get(getTotalUserCount);
+router.route("/getTotalActiveUserCount").get(getTotalActiveUserCount);
+router.route("/getTotalRoleCount").get(getTotalRoleCount);
+router.route("/getUserApprovalRequest").get(getUserApprovalRequest);
+router.route("/getLast7daysUserApproval").get(getLast7daysUserApproval);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

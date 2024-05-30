@@ -38,42 +38,15 @@ exports.getProductRequest = catchAsyncError(async (req, res, next) => {
 });
 // get Product Request by requestId
 /////////////////////////////////////////////////////////////////////////////////////////////
-exports.getProductRequestByRequestId = catchAsyncError(
-  async (req, res, next) => {
-    const id = req.params.request_id;
+exports.getProductRequestByRequestId = catchAsyncError(async (req, res, next) => {
+  const id = req.params.request_id;
 
-    try {
-      // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
-      const request = await Request.find({ request_id: id })
-        .populate("user_id")
-        .populate({
-          path: "request_id",
-          populate: {
-            path: "product_id._id",
-            model: "Product",
-            populate: { path: "type_id", model: "ProductType" }, // Populate type_id
-          },
-        })
-        .sort({ "date.getMonth()": 1 });
-      if (request.length != 0) {
-        res.status(200).json({
-          success: true,
-          request,
-        });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-);
-
-////////////getAll product request//////////////
-exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
   try {
-    const request = await Request.find()
-    .populate("user_id")
-    .populate({
-      path: "request_id",
+    // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
+    const request = await Request.find({ request_id: id })
+      .populate("user_id")
+      .populate({
+        path: "request_id",
         populate: {
           path: "product_id._id",
           model: "Product",
@@ -81,9 +54,36 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
         },
       })
       .sort({ "date.getMonth()": 1 });
-      console.log(request)
     if (request.length != 0) {
-      console.log(request);
+      res.status(200).json({
+        success: true,
+        request,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
+////////////getAll product request//////////////
+exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
+
+  try {
+    const request = await Request.find()
+      .populate("user_id")
+      .populate({
+        path: "request_id",
+        populate: {
+          path: "product_id._id",
+          model: "Product",
+          populate: { path: "type_id", model: "ProductType" }, // Populate type_id
+        },
+      })
+      .sort({ "date.getMonth()": 1 });
+    // console.log(request)
+    if (request.length != 0) {
+      // console.log(request);
       res.status(200).json({
         success: true,
         request,
@@ -96,41 +96,41 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
 
 
 exports.getLast7daysProductRequest = catchAsyncError(async (req, res, next) => {
-    try {
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
 
-        let NoOfRequest = [];
+    let NoOfRequest = [];
 
-        for (let index = 0; index < 7; index++) {
-            const startOfDay = new Date(today);
-            startOfDay.setUTCDate(today.getUTCDate() - index);
-            // console.log('Start of Day:', startOfDay);
+    for (let index = 0; index < 7; index++) {
+      const startOfDay = new Date(today);
+      startOfDay.setUTCDate(today.getUTCDate() - index);
+      // console.log('Start of Day:', startOfDay);
 
-            const endOfDay = new Date(startOfDay);
-            endOfDay.setUTCHours(23, 59, 59, 999);
-            // console.log('End of Day:', endOfDay);
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      // console.log('End of Day:', endOfDay);
 
-            const requests = await Request.find({
-                createdAt: {
-                    $gte: startOfDay,
-                    $lte: endOfDay
-                }
-            });
-            console.log(`Requests on day ${index}:`, requests.length);
-            NoOfRequest.push(requests.length);
+      const requests = await Request.find({
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay
         }
-
-        res.send({
-            status: 200,
-            requestCounts: NoOfRequest.reverse(), // Reverse the array to get the counts in chronological order
-        });
-    } catch (error) {
-        console.error('Error finding requests:', error);
-        res.status(500).send({
-            message: 'Internal server error',
-        });
+      });
+      // console.log(`Requests on day ${index}:`, requests.length);
+      NoOfRequest.push(requests.length);
     }
+
+    res.send({
+      status: 200,
+      requestCounts: NoOfRequest.reverse(), // Reverse the array to get the counts in chronological order
+    });
+  } catch (error) {
+    console.error('Error finding requests:', error);
+    res.status(500).send({
+      message: 'Internal server error',
+    });
+  }
 });
 
 
@@ -142,14 +142,14 @@ exports.getWaitingProductRequest = catchAsyncError(async (req, res, next) => {
   try {
     // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
     const request = await Request.find({ status: 'waiting' }).populate("user_id")
-    .populate({
-      path: "request_id",
-      populate: {
-        path: "product_id._id",
-        model: "Product",
-        populate: { path: "type_id", model: "ProductType" }, // Populate type_id
-      },
-    })
+      .populate({
+        path: "request_id",
+        populate: {
+          path: "product_id._id",
+          model: "Product",
+          populate: { path: "type_id", model: "ProductType" }, // Populate type_id
+        },
+      })
     if (request.length != 0) {
       const waitingRequestCount = request.length
       res.status(200).json({
@@ -164,10 +164,11 @@ exports.getWaitingProductRequest = catchAsyncError(async (req, res, next) => {
 });
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+// Add Product Request
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.productRequest = catchAsyncError(async (req, res, next) => {
   const { user_id, product_id } = req.body;
-  console.log(req.body);
+  // console.log(req.body)
 
   // Generate a unique request number
   const lastRequest = await Request.findOne(
@@ -175,11 +176,11 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
     {},
     { sort: { createdAt: -1 } }
   );
-  let requestNumber = "ST-0001";
+  let requestNumber = "0001";
   if (lastRequest) {
-    const lastRequestNumber = lastRequest.request_number || "ST-0000";
-    console.log(lastRequestNumber);
-    const nextNumber = parseInt(lastRequestNumber.split("-")[1], 10) + 1;
+    const lastRequestNumber = lastRequest.request_number || "0000";
+    // console.log(lastRequestNumber);
+    const nextNumber = parseInt(lastRequestNumber, 10) + 1;
     requestNumber = padZeros(nextNumber, 4);
   }
 
@@ -196,27 +197,24 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
     });
 
     if (request) {
-      console.log(requestNumber);
+      // console.log(requestNumber);
       res.status(200).json({
         success: true,
       });
-      const title = "Muneeb Ur Rehman";
-      const message = "Request Created Successfully";
-      sendMessage(user_id, title, message);
+      sendMessage();
     }
   }
 });
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 const padZeros = (number, length) => {
-  return `ST-${String(number).padStart(length, "0")}`;
+  return String(number).padStart(length, "0");
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getRequestByMonth = catchAsyncError(async (req, res, next) => {
   const userId = req.params.user; // Renamed id to userId for clarity
-  console.log(userId);
+  // console.log(userId);
 
   try {
     const requestsByMonth = await Request.aggregate([
@@ -234,7 +232,7 @@ exports.getRequestByMonth = catchAsyncError(async (req, res, next) => {
       monthCounts[entry._id - 1] = entry.count; // Subtract 1 to adjust for zero-based indexing
     });
 
-    console.log(monthCounts);
+    // console.log(monthCounts);
     res.status(200).json({
       success: true,
       countsByMonth: monthCounts,
@@ -286,7 +284,7 @@ exports.getRequestCategoryCount = catchAsyncError(async (req, res, next) => {
       request: productTypeCounts[index],
     }));
     const total = requests.length;
-    console.log(result);
+    // console.log(result);
     res.status(200).json({
       success: true,
       productTypeCounts: result,
@@ -297,6 +295,7 @@ exports.getRequestCategoryCount = catchAsyncError(async (req, res, next) => {
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
+
 
 //////////update request status/////////////////
 
@@ -310,39 +309,104 @@ exports.updateRequestStatus = async (req, res) => {
     );
 
     // Fetch all requests with the updated status
-    let requestsWithUpdatedStatus = await Request.find().populate("user_id");
+    let requestsWithUpdatedStatus = await Request.find().populate('user_id');
 
     // Send the fetched requests as the response
     res.send(requestsWithUpdatedStatus);
   } catch (error) {
     // Handle any errors
-    res
-      .status(500)
-      .send({ error: "An error occurred while updating the request status" });
+    res.status(500).send({ error: 'An error occurred while updating the request status' });
   }
 };
 
 exports.getAllUserRequestedproduct = async (req, res) => {
   let result = await UserProduct.find();
-exports.getAllUserRequestedproduct = async (req, res) => {
-  let result = await UserProduct.find();
   res.send(result);
 }
-exports.updateUserRequestByIds = async (req, res) => {
-  let result = await UserProduct.findOneAndUpdate({
-    "_id": req.params.request_id,
-    "product_id._id": req.params.product_id
-  },
-    {
-      $set: {
-        "product_id.$.status": req.body.status,
-        "product_id.$.received_quantity": req.body.received_quantity
-      }
-    },
-    { new: true });
 
-  res.status(200).send(result);
+
+exports.updateUserRequestByIds = async (req, res) => {
+  try {
+    // Update the specific product in the request
+    let result = await UserProduct.findOneAndUpdate(
+      {
+        "_id": req.params.request_id,
+        "product_id._id": req.params.product_id
+      },
+      {
+        $set: {
+          "product_id.$.status": req.body.status,
+          "product_id.$.received_quantity": req.body.received_quantity
+        }
+      },
+      { new: true }
+    );
+
+    if (result) {
+      // Retrieve the updated request with populated fields
+      const data = await Request.find({ "request_id": req.params.request_id }).populate("user_id")
+        .populate({
+          path: "request_id",
+          populate: {
+            path: "product_id._id",
+            model: "Product",
+            populate: { path: "type_id", model: "ProductType" },
+          },
+        });
+
+      // Check the status of all products
+      const allRejected = data[0].request_id.product_id.every(item => item.status === "rejected");
+      let partialUpdateMade = false;
+
+      if (allRejected) {
+        // Update request status to "rejected" if all products are rejected
+        await Request.findOneAndUpdate(
+          { request_id: req.params.request_id },
+          { $set: { status: "rejected" } }
+        );
+      } else {
+        // Check for any product with "waiting" status
+        for (const item of data[0].request_id.product_id) {
+          if (item.status === "waiting") {
+            await Request.findOneAndUpdate(
+              { request_id: req.params.request_id },
+              { $set: { status: "processing" } }
+            );
+            partialUpdateMade = true;
+            break; // Assuming you only need to do this once
+          }
+        }
+
+        if (!partialUpdateMade) {
+          await Request.findOneAndUpdate(
+            { request_id: req.params.request_id },
+            { $set: { status: "receiving" } }
+          );
+        }
+      }
+
+      // Retrieve the updated request to send in response
+      const newData = await Request.find({ "request_id": req.params.request_id }).populate("user_id")
+        .populate({
+          path: "request_id",
+          populate: {
+            path: "product_id._id",
+            model: "Product",
+            populate: { path: "type_id", model: "ProductType" },
+          },
+        });
+
+      res.status(200).send(newData);
+    } else {
+      res.status(404).send({ message: "Request not found" });
+    }
+  } catch (error) {
+    console.error('Error updating user request:', error);
+    res.status(500).send({ message: 'Internal server error' });
+  }
 };
+
+
 /// Product receiving
 exports.productReceiving = catchAsyncError(async (req, res, next) => {
   try {
@@ -350,7 +414,7 @@ exports.productReceiving = catchAsyncError(async (req, res, next) => {
       { request_id: req.body.Id },
       { $set: { status: "completed" } }
     );
-    console.log(result);
+    // console.log(result);
     if (result.modifiedCount === 1) {
       // Successfully updated
       res.status(200).json({ success: true });
@@ -363,6 +427,7 @@ exports.productReceiving = catchAsyncError(async (req, res, next) => {
   }
 });
 
+
 exports.getRequestedProduct = catchAsyncError(async (req, res) => {
   const request_id = req.params.request_id;
   const request = await UserProduct.findOne({ _id: request_id }).populate("product_id._id")
@@ -370,6 +435,35 @@ exports.getRequestedProduct = catchAsyncError(async (req, res) => {
   res.send({
     success: true,
     request
-  });
+  })
 })
-}
+exports.getRequestById = catchAsyncError(async (req, res) => {
+  try {
+    const currentRequestId = req.params.currentRequestId
+    // console.log(currentRequestId);
+    const request = await Request.findOne({ _id: currentRequestId }).populate({
+      path: 'request_id',
+      populate: [
+        { path: 'user_id' },
+        { path: 'product_id._id', model: 'Product' }
+      ]
+    })
+      .populate('user_id')
+      .exec();
+    // console.log(request);
+    if (request) {
+      res.send({
+        success: true,
+        request
+      })
+    }
+
+  } catch (error) {
+    res.send({
+      error
+    })
+
+  }
+
+
+})
