@@ -1,10 +1,11 @@
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const mongoose = require("mongoose");
-
+const moment = require("moment");
 const Request = require("../models/request/productRequestModel");
 const UserProduct = require("../models/request/userProductModel");
 const ProductType = require("../models/product/productTypeModel");
+const User = require("../models/user/userModel");
 const { sendMessage } = require("./notificationController");
 const { request, response } = require("express");
 
@@ -164,6 +165,7 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
   const { user_id, product_id, comment } = req.body;
   console.log(req.body);
 
+  const user = await User.findOne({ _id: user_id });
   // Generate a unique request number
   const lastRequest = await Request.findOne(
     {},
@@ -196,7 +198,8 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
       res.status(200).json({
         success: true,
       });
-      const title = "Muneeb Ur Rehman";
+      const user_id = user._id;
+      const title = user.name;
       const message = "Request Created Successfully";
       sendMessage(user_id, title, message);
     }
@@ -369,4 +372,34 @@ exports.getRequestedProduct = catchAsyncError(async (req, res) => {
     success: true,
     request,
   });
+});
+
+///Request Invoice Notification////////
+exports.getRecentRequestNotification = catchAsyncError(async (req, res) => {
+  const id = req.params.id;
+  console.log("id", id);
+  try {
+    const request = await Request.find({ user_id: id }).populate("user_id");
+    const sortedRequests = request.sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    );
+
+    const recentRequest = sortedRequests.slice(0, 10);
+    const notifications = recentRequest.map((Invoice) => {
+      const updatedAt = new Date(Invoice.updatedAt);
+      const timeElapsed = moment(updatedAt).fromNow();
+      return {
+        noti: `Your Request No (${Invoice.request_number}) is in ${Invoice.status} stage.`,
+        time: timeElapsed,
+        status: Invoice.status,
+      };
+    });
+
+    res.json({
+      notifications,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
 });

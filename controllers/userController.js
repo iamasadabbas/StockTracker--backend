@@ -8,6 +8,7 @@ const RoleTask = require("../models/user/roleTaskModel");
 const Department = require("../models/user/departmentModel");
 const designationModel = require("../models/user/designationModel");
 const Faculty = require("../models/user/facultyModel");
+const sendToken = require("../utils/jwtToken");
 const { response } = require("express");
 
 //Register User
@@ -70,7 +71,15 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   console.log(req.body);
 
   if (!email || !password) {
-    return next(new ErrorHandler("Please Enter Email or Password", 400));
+    res.json({ success: false, message: "Please Enter Email or Password" });
+  }
+
+  // Define a regex for validating email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Validate the email format
+  if (!emailRegex.test(email)) {
+    res.json({ success: false, message: "Invalid email format" });
   }
 
   const user = await User.findOne({ email })
@@ -95,12 +104,12 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
       message: "Ask the admin to allow you to login",
     });
   } else {
-    // token(user, 200, res);
-    res.status(200).json({
-      success: true,
-      user,
-      message: "Login Successfully",
-    });
+    sendToken(user, 200, res);
+    // res.status(200).json({
+    //   success: true,
+    //   user,
+    //   message: "Login Successfully",
+    // });
   }
 });
 
