@@ -7,7 +7,6 @@ const {
     getAllProductRequest,
     getProductRequestByRequestId,
     updateRequestStatus,
-    getUserRequestById,
     getRequestedProduct,
     updateUserRequestByIds,
     getAllUserRequestedproduct, 

@@ -33,13 +33,23 @@ const userSchema = new mongoose.Schema(
       ref: "Designation",
       required: true,
     },
+    department_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+      required: true,
+    },
+    faculty_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Faculty",
+      required: true,
+    },
     role_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
       default: null
     },
-    gender:{
-    type:String
+    gender: {
+      type: String,
     },
     status: {
       type: Boolean,

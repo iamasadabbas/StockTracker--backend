@@ -12,17 +12,18 @@ exports.getProductLocationById = catchAsyncError(async (req, res, next) => {
     }
   });
 
-  exports.getProductByLocationId = catchAsyncError(async (req, res, next) => {
-    try {
-      const request = await productLocation.find({location_id:req.params.location_id}).populate('product_id')
-      if (request.length != 0) {
-        res.send({status:200,request})
-        
-      }
-    } catch (error) {
-      console.log(error);
+exports.getProductByLocationId = catchAsyncError(async (req, res, next) => {
+  try {
+    const request = await productLocation
+      .find({ location_id: req.params.location_id })
+      .populate("product_id");
+    if (request.length != 0) {
+      res.send({ status: 200, request });
     }
-  });
+  } catch (error) {
+    console.log(error);
+  }
+});
 
   exports.getTotalProductCount = catchAsyncError(async (req, res, next) => {
     try {
@@ -54,15 +55,15 @@ exports.getProductLocationById = catchAsyncError(async (req, res, next) => {
         const { product_id } = req.params;
         const { quantity } = req.body;
 
-        let result = await productLocation.findOne({ product_id })
+    let result = await productLocation.findOne({ product_id });
 
-        if (!result) {
-            return res.status(404).send("Product not found");
-        }
+    if (!result) {
+      return res.status(404).send("Product not found");
+    }
 
-        // Update the quantity field
-        result.quantity = quantity;
-        await result.save();
+    // Update the quantity field
+    result.quantity = quantity;
+    await result.save();
 
         return res.send({
           message:"Success",

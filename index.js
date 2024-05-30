@@ -32,11 +32,11 @@ require("dotenv").config();
 
 //uncaught exception
 
-process.on("uncaughtException", (err) => {
-  console.log(`Error:${err.message}`);
-  console.log("shutting down the server due to uncaught exception");
-  process.exit(1);
-});
+// process.on("uncaughtException", (err) => {
+//   console.log(`Error:${err.message}`);
+//   console.log("shutting down the server due to uncaught exception");
+//   process.exit(1);
+// });
 
 const db = connectDB();
 

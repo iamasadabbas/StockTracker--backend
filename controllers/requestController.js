@@ -74,6 +74,9 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
       .populate("user_id")
       .populate({
         path: "request_id",
+      .populate("user_id")
+      .populate({
+        path: "request_id",
         populate: {
           path: "product_id._id",
           model: "Product",
@@ -94,19 +97,29 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
   }
 });
 
-
 exports.getLast7daysProductRequest = catchAsyncError(async (req, res, next) => {
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
 
+    let NoOfRequest = [];
     let NoOfRequest = [];
 
     for (let index = 0; index < 7; index++) {
       const startOfDay = new Date(today);
       startOfDay.setUTCDate(today.getUTCDate() - index);
       // console.log('Start of Day:', startOfDay);
+    for (let index = 0; index < 7; index++) {
+      const startOfDay = new Date(today);
+      startOfDay.setUTCDate(today.getUTCDate() - index);
+      // console.log('Start of Day:', startOfDay);
 
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      // console.log('End of Day:', endOfDay);
       const endOfDay = new Date(startOfDay);
       endOfDay.setUTCHours(23, 59, 59, 999);
       // console.log('End of Day:', endOfDay);
@@ -133,12 +146,7 @@ exports.getLast7daysProductRequest = catchAsyncError(async (req, res, next) => {
   }
 });
 
-
-
-
-
 exports.getWaitingProductRequest = catchAsyncError(async (req, res, next) => {
-
   try {
     // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
     const request = await Request.find({ status: 'waiting' }).populate("user_id")
@@ -151,11 +159,11 @@ exports.getWaitingProductRequest = catchAsyncError(async (req, res, next) => {
         },
       })
     if (request.length != 0) {
-      const waitingRequestCount = request.length
+      const waitingRequestCount = request.length;
       res.status(200).json({
         success: true,
         waitingRequestCount,
-        request
+        request,
       });
     }
   } catch (error) {
@@ -194,6 +202,7 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
       request_id: userProduct._id,
       user_id,
       request_number: requestNumber,
+      comment,
     });
 
     if (request) {
@@ -430,7 +439,9 @@ exports.productReceiving = catchAsyncError(async (req, res, next) => {
 
 exports.getRequestedProduct = catchAsyncError(async (req, res) => {
   const request_id = req.params.request_id;
-  const request = await UserProduct.findOne({ _id: request_id }).populate("product_id._id")
+  const request = await UserProduct.findOne({ _id: request_id }).populate(
+    "product_id._id"
+  );
 
   res.send({
     success: true,
