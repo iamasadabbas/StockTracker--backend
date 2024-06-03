@@ -29,12 +29,12 @@ exports.getProductByLocationId = catchAsyncError(async (req, res, next) => {
 exports.getTotalProductCount = catchAsyncError(async (req, res, next) => {
   try {
     const request = await productLocation.find();
-    console.log(request);
+    // console.log(request);
     if (request.length != 0) {
-      console.log("enter");
+      // console.log("enter");
       let lowStockProduct = 0;
       let outOfStockProduct = 0;
-      request.map((item) => {
+      request.map(item => {
         if (item.quantity < 5) {
           lowStockProduct++;
         } else if (item.quantity === 0) {

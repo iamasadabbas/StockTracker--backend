@@ -10,6 +10,7 @@ const designationModel = require("../models/user/designationModel");
 const Faculty = require("../models/user/facultyModel");
 const sendToken = require("../utils/jwtToken");
 const { response } = require("express");
+const { sendMessage } = require("./notificationController");
 
 //Register User
 //////////////////////////////////////////////////////////////////////////
@@ -41,6 +42,8 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
       status,
     });
     console.log(req.body);
+    // Convert email to lowercase
+    email = email.toLowerCase();
 
     res.send({
       status: 200,
@@ -71,7 +74,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   console.log(req.body);
 
   if (!email || !password) {
-    res.json({ success: false, message: "Please Enter Email or Password" });
+    res.json({ success: false, message: "Please Enter Email & Password" });
   }
 
   // Define a regex for validating email format
@@ -536,12 +539,16 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
       return res.status(404).json({
         success: false,
       });
+    } else {
+      res.status(200).json({
+        success: true,
+        updatedUser,
+      });
+      const user_id = _id;
+      const title = '';
+      const message = "Profile Updated Successfully";
+      sendMessage(user_id, title, message);
     }
-
-    res.status(200).json({
-      success: true,
-      updatedUser,
-    });
   } catch (error) {
     console.log(error);
   }

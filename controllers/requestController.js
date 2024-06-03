@@ -13,9 +13,7 @@ const { request, response } = require("express");
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getProductRequest = catchAsyncError(async (req, res, next) => {
   const id = req.params.user;
-
   try {
-    // const request= await Request.find({user_id:id}).populate({path:"product_id._id",populate:{path:"company_id"}}).populate('user_id')
     const request = await Request.find({ user_id: id })
       .populate("user_id")
       .populate({
@@ -26,7 +24,7 @@ exports.getProductRequest = catchAsyncError(async (req, res, next) => {
           populate: { path: "type_id", model: "ProductType" }, // Populate type_id
         },
       })
-      .sort({ "date.getMonth()": 1 });
+      .sort({ updatedAt: -1 });
     if (request.length != 0) {
       res.status(200).json({
         success: true,
