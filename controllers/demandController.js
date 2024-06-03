@@ -25,7 +25,7 @@ exports.demandProduct = catchAsyncError(async (req, res, next) => {
 exports.getAllDemand = catchAsyncError(async (req, res, next) => {
   try {
     const demandedProduct = await Demand.find({
-    }).populate('products._id')
+    }).populate('products._id').sort({ createdAt: -1 });
     if (demandedProduct) {
       res.status(200).send({ demandedProduct })
     }
@@ -49,9 +49,9 @@ exports.getDemandbyId = catchAsyncError(async (req, res, next) => {
 exports.updateDemandStatus = catchAsyncError(async (req, res, next) => {
   try {
     const demandedProduct = await Demand.findOneAndUpdate({ _id: req.params._id }, { $set: { "status": req.body.status } })
-
+// console.log(demandedProduct);
     if (demandedProduct) {
-      const alldemand=await Demand.find().populate('products._id')
+      const alldemand=await Demand.find().populate('products._id').sort({createdAt: -1})
       res.status(200).send({ alldemand })
     }
   } catch (error) {

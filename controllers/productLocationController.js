@@ -5,7 +5,6 @@ exports.getProductLocationById = catchAsyncError(async (req, res, next) => {
       const request = await productLocation.findOne({ product_id:req.params.product_id })
       if (request?.length != 0) {
         res.send({status:200,request})
-        
       }
     } catch (error) {
       console.log(error);

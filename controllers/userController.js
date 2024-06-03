@@ -193,7 +193,7 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
 });
 exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
   try {
-    const userApprovalRequest = await User.find({ role_id: null });
+    const userApprovalRequest = await User.find({ role_id: null })
     const totalUserApprovalRequest = userApprovalRequest.length;
     
     if (totalUserApprovalRequest > 0) {
@@ -254,7 +254,8 @@ exports.getRegistartionRequest = catchAsyncErrors(async (req, res, next) => {
   // const name = req.params.roleName;
   // if (name == "SuperAdmin") {
   try {
-    const users = await User.find({role_id:null})
+    const users = await User.find({role_id:null}).populate("department_id")
+    .populate("designation_id").populate("faculty_id");
     if (users) {
       res.send({
         status: 200,
@@ -562,7 +563,8 @@ exports.updateRole = catchAsyncErrors(async (req, res, next) => {
     },
     {
       $set: {
-        "role_id": roleId,
+        "role_id":roleId,
+        "status":true,
       },
     }
   )
@@ -687,13 +689,13 @@ exports.getSpecificTask = catchAsyncErrors(async (req, res, next) => {
 // user Role and status update
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
-  const { _id, name, phone_no } = req.body;
-  // console.log(req.body);
+  const { _id, name, email } = req.body;
   const updatedFields = {
     name: req.body.name,
-    phone_no: req.body.phone_no,
+    email: req.body.email,
   };
   if (req.file && req.file.path) {
+    console.log(req.file.path);
     updatedFields.avatar = req.file.path;
   }
 
@@ -710,7 +712,7 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      updatedUser,
+      message:'user updated successfully'
     });
   } catch (error) {
     console.log(error);

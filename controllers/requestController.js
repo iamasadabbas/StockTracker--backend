@@ -25,7 +25,7 @@ exports.getProductRequest = catchAsyncError(async (req, res, next) => {
           populate: { path: "type_id", model: "ProductType" }, // Populate type_id
         },
       })
-      .sort({ "date.getMonth()": 1 });
+      .sort({ "date.getMonth()": -1 });
     if (request.length != 0) {
       res.status(200).json({
         success: true,
@@ -68,12 +68,8 @@ exports.getProductRequestByRequestId = catchAsyncError(async (req, res, next) =>
 
 ////////////getAll product request//////////////
 exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
-
   try {
     const request = await Request.find()
-      .populate("user_id")
-      .populate({
-        path: "request_id",
       .populate("user_id")
       .populate({
         path: "request_id",
@@ -83,61 +79,66 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
           populate: { path: "type_id", model: "ProductType" }, // Populate type_id
         },
       })
-      .sort({ "date.getMonth()": 1 });
-    // console.log(request)
-    if (request.length != 0) {
+      .sort({ createdAt: -1 }); // Sort by date in descending order (newest first)
+
+    if (request.length !== 0) {
       // console.log(request);
       res.status(200).json({
         success: true,
         request,
       });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: "No requests found",
+      });
     }
   } catch (error) {
-    console.log("error is " + error);
+    console.log("Error: " + error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
+
+
 
 exports.getLast7daysProductRequest = catchAsyncError(async (req, res, next) => {
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
-  try {
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
 
-    let NoOfRequest = [];
     let NoOfRequest = [];
 
     for (let index = 0; index < 7; index++) {
       const startOfDay = new Date(today);
       startOfDay.setUTCDate(today.getUTCDate() - index);
       // console.log('Start of Day:', startOfDay);
-    for (let index = 0; index < 7; index++) {
-      const startOfDay = new Date(today);
-      startOfDay.setUTCDate(today.getUTCDate() - index);
-      // console.log('Start of Day:', startOfDay);
+      for (let index = 0; index < 7; index++) {
+        const startOfDay = new Date(today);
+        startOfDay.setUTCDate(today.getUTCDate() - index);
+        // console.log('Start of Day:', startOfDay);
 
-      const endOfDay = new Date(startOfDay);
-      endOfDay.setUTCHours(23, 59, 59, 999);
-      // console.log('End of Day:', endOfDay);
-      const endOfDay = new Date(startOfDay);
-      endOfDay.setUTCHours(23, 59, 59, 999);
-      // console.log('End of Day:', endOfDay);
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        // console.log('End of Day:', endOfDay);
 
-      const requests = await Request.find({
-        createdAt: {
-          $gte: startOfDay,
-          $lte: endOfDay
-        }
+        const requests = await Request.find({
+          createdAt: {
+            $gte: startOfDay,
+            $lte: endOfDay
+          }
+        });
+        // console.log(`Requests on day ${index}:`, requests.length);
+        NoOfRequest.push(requests.length);
+      }
+
+      res.send({
+        status: 200,
+        requestCounts: NoOfRequest.reverse(), // Reverse the array to get the counts in chronological order
       });
-      // console.log(`Requests on day ${index}:`, requests.length);
-      NoOfRequest.push(requests.length);
     }
-
-    res.send({
-      status: 200,
-      requestCounts: NoOfRequest.reverse(), // Reverse the array to get the counts in chronological order
-    });
   } catch (error) {
     console.error('Error finding requests:', error);
     res.status(500).send({
@@ -318,7 +319,10 @@ exports.updateRequestStatus = async (req, res) => {
     );
 
     // Fetch all requests with the updated status
-    let requestsWithUpdatedStatus = await Request.find().populate('user_id');
+    if(updatedRequest){
+      let requestsWithUpdatedStatus = await Request.find().populate('user_id');
+
+    }
 
     // Send the fetched requests as the response
     res.send(requestsWithUpdatedStatus);

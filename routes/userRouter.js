@@ -90,7 +90,7 @@ router.route("/editTask").put(editTask);
 router.route("/editUser/:user_id").put(editUser);
 router.put(
   "/editUserDetail",
-  upload.single("image"),
+  upload.single("avatar"),
   controller.editUserDetail
 );
 router.route("/changePassword").put(changePassword);
