@@ -7,6 +7,7 @@ const Role = require("../models/user/roleModel");
 const RoleTask = require("../models/user/roleTaskModel");
 const Department = require("../models/user/departmentModel");
 const designationModel = require("../models/user/designationModel");
+const sendToken=require("../utils/jwtToken")
 const Faculty = require("../models/user/facultyModel");
 const { response } = require("express");
 const { sendMessage } = require("./notificationController");
@@ -70,7 +71,7 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 /////////////////////////////////////////////////////////////////////////////
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
 
   if (!email || !password) {
 
@@ -92,16 +93,11 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
     .populate("designation_id");
 
   if (!user) {
-    res.json({ success: false, message: "Invalid email or password" });
-  } else if (user?.role_id == null) {
-    res.json({
-      success: false,
-      message: "Role not assigned",
-    });
+    return next(new ErrorHandler("Invalid email or password", 401));
   }
   const validPass = await bcrypt.compare(req.body.password, user.password);
   if (!validPass) {
-    res.json({ success: false, message: "Invalid email or password" });
+    return next(new ErrorHandler("Invalid Email or password", 401));
   } else if (user.status !== true) {
     res.json({
       success: false,
@@ -109,12 +105,13 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
     });
   } else {
 
-    sendToken(user, 200, res);
-    // res.status(200).json({
-    //   success: true,
-    //   user,
-    //   message: "Login Successfully",
-    // });
+     sendToken(user, 200, res);
+    res.status(200).json({
+      success: true,
+      user,
+      message: "Login Successfully",
+    });
+
 
   }
 });
@@ -133,10 +130,148 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
 // get all users
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const users = await User.find({role_id:{ $ne: null }}).populate("role_id").populate("designation_id");
+    if (users) {
+      res.send({
+        status: 200,
+        users,
+      });
+    } else {
+      res.send({ status: 200, message: "user not found" });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
+  // console.log('enter');
+  const user = await User.findById(req.user.id).populate("role_id")
+  res.status(200).send({
+    status: true,
+    user,
+  });
+});
+exports.getTotalUserCount = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const users = await User.find()
+    if(users){
+      const totalUser=users.length
+      res.send({
+            status: 200,
+            totalUser,
+          });
+    }else {
+        res.send({ status: 200, message: "user not found" });
+      }
+    
+  } catch (error) {
+    console.error(error);
+  }
+});
+exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
+
+    let NoOfApproval = [];
+
+    for (let index = 0; index < 7; index++) {
+      const startOfDay = new Date(today);
+      startOfDay.setUTCDate(today.getUTCDate() - index);
+      // console.log('Start of Day:', startOfDay);
+
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      // console.log('End of Day:', endOfDay);
+
+      const approval = await User.find({
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        }
+      });
+      // console.log(`Requests on day ${index}:`, requests.length);
+      NoOfApproval.push(approval.length);
+    }
+
+    res.send({
+      status: 200,
+      approvalCounts: NoOfApproval.reverse(), // Reverse the array to get the counts in chronological order
+    });
+  } catch (error) {
+    console.error('Error finding requests:', error);
+    res.status(500).send({
+      message: 'Internal server error',
+    });
+  }
+});
+exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const userApprovalRequest = await User.find({ role_id: null })
+    const totalUserApprovalRequest = userApprovalRequest.length;
+    
+    if (totalUserApprovalRequest > 0) {
+      res.send({
+        status: 200,
+        totalUserApprovalRequest,
+        userApprovalRequest,
+      });
+    } else {
+      res.send({
+        status: 200,
+        totalUserApprovalRequest: 0,
+        message: "user not found",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ status: 500, message: "Internal server error" });
+  }
+});
+
+exports.getTotalActiveUserCount = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const users = await User.find({status: true})
+    if(users){
+      const totalActiveUser=users.length
+      // console.log(totalActiveUser);
+      res.send({
+            status: 200,
+            totalActiveUser,
+          });
+    }else {
+        res.send({ status: 200, message: "user not found" });
+      }
+    
+  } catch (error) {
+    console.error(error);
+  }
+});
+exports.getTotalRoleCount = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const role = await Role.find()
+    if(role){
+      const totalRole=role.length
+      res.send({
+            status: 200,
+            totalRole,
+          });
+    }else {
+        res.send({ status: 200, message: "role not found" });
+      }
+    
+  } catch (error) {
+    console.error(error);
+  }
+});
+exports.getRegistartionRequest = catchAsyncErrors(async (req, res, next) => {
   // const name = req.params.roleName;
   // if (name == "SuperAdmin") {
   try {
-    const users = await User.find().populate("role_id");
+    const users = await User.find({role_id:null}).populate("department_id")
+    .populate("designation_id").populate("faculty_id");
     if (users) {
       res.send({
         status: 200,
@@ -184,7 +319,7 @@ exports.addTask = catchAsyncErrors(async (req, res, next) => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.editTask = catchAsyncErrors(async (req, res, next) => {
   const { _id, name, description } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   try {
     const updatedTask = await Task.findByIdAndUpdate(
       _id,
@@ -261,7 +396,7 @@ exports.addRole = catchAsyncErrors(async (req, res, next) => {
 exports.getRole = catchAsyncErrors(async (req, res, next) => {
   try {
     const role = await Role.find();
-    console.log(role);
+    // console.log(role);
     res.send({ status: 200, role });
   } catch (error) {
     res.error(error.message);
@@ -435,6 +570,53 @@ exports.updateAssignTask = catchAsyncErrors(async (req, res, next) => {
     return res.send(data);
   }
 });
+exports.updateRole = catchAsyncErrors(async (req, res, next) => {
+  const { userId,roleId } = req.body;
+
+  let result = await User.findOneAndUpdate(
+    {
+      _id:userId
+    },
+    {
+      $set: {
+        "role_id":roleId,
+        "status":true,
+      },
+    }
+  )
+  if (result) {
+    let user=await User.find({role_id:null})
+    return res.send({
+      status:200,
+      message:"Updated Successfully",
+      user
+  });
+  }
+
+});
+exports.updateUserStatus = catchAsyncErrors(async (req, res, next) => {
+  const { userId,status } = req.body;
+
+  let result = await User.findOneAndUpdate(
+    {
+      _id:userId
+    },
+    {
+      $set: {
+        "status":status,
+      },
+    }
+  )
+  if (result) {
+    let user=await User.find({role_id:{ $ne: null }}).populate("role_id").populate("designation_id");
+    return res.send({
+      status:200,
+      message:"Updated Successfully",
+      user
+  });
+  }
+
+});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Remove Task To Role
@@ -468,8 +650,8 @@ exports.removeUser = catchAsyncErrors(async (req, res, next) => {
 //////////Edit User //////////
 exports.editUser = catchAsyncErrors(async (req, res, next) => {
   const { name, email, phone_no } = req.body;
-  console.log(req.params.user_id);
-  console.log(req.body);
+  // console.log(req.params.user_id);
+  // console.log(req.body);
   try {
     await User.updateOne({ name: name, email: email, phone_no: phone_no });
     res.send({
@@ -523,13 +705,13 @@ exports.getSpecificTask = catchAsyncErrors(async (req, res, next) => {
 // user Role and status update
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
-  const { _id, name, phone_no } = req.body;
-  console.log(req.body);
+  const { _id, name, email } = req.body;
   const updatedFields = {
     name: req.body.name,
-    phone_no: req.body.phone_no,
+    email: req.body.email,
   };
   if (req.file && req.file.path) {
+    console.log(req.file.path);
     updatedFields.avatar = req.file.path;
   }
 
@@ -545,6 +727,7 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
     } else {
       res.status(200).json({
         success: true,
+        message:'user updated successfully',
         updatedUser,
       });
       const user_id = _id;
@@ -552,6 +735,7 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
       const message = "Profile Updated Successfully";
       sendMessage(user_id, title, message);
     }
+
   } catch (error) {
     console.log(error);
   }

@@ -14,6 +14,7 @@ const {
   getWaitingProductRequest,
   productReceiving,
   getLast7daysProductRequest,
+  getRequestById,
   getRecentRequestNotification,
 } = require("../controllers/requestController");
 const router = express.Router();
@@ -36,6 +37,8 @@ router.route("/productReceiving").post(productReceiving);
 router.route("/requestedProduct/:request_id").get(getRequestedProduct);
 router.route("/getWaitingProductRequest").get(getWaitingProductRequest);
 router.route("/getLast7daysProductRequest").get(getLast7daysProductRequest);
+router.route("/getRequestById/:currentRequestId").get(getRequestById);
+
 router.route("/getRequestNotification/:id").get(getRecentRequestNotification);
 
 module.exports = router;

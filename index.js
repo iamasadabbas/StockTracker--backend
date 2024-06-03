@@ -14,7 +14,7 @@ const cors = require("cors");
 mongoose.set("strictQuery", false);
 
 const corsOptions = {
-  origin:  "http://localhost:3000",
+  origin:  true,
   credentials: true,
   
 };
