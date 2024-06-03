@@ -11,30 +11,14 @@ admin.initializeApp({
 exports.saveToken = catchAsyncErrors(async (req, res, next) => {
   const { user_id, token } = req.body;
   console.log(req.body);
-
   try {
-    // Use findOneAndUpdate with upsert option
-    const newToken = await Token.findOneAndUpdate(
-      { user_id: user_id }, // Filter condition
-      { token: token }, // Update data
-      { new: true, upsert: true, setDefaultsOnInsert: true } // Options
-    );
+    const newToken = await Token.create({
+      user_id,
+      token,
+    });
 
     console.log(newToken);
-
-    // Respond with the new or updated token
-    res.status(200).json({
-      success: true,
-      data: newToken,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "An error occurred while saving the token.",
-      error: error.message,
-    });
-  }
+  } catch (error) {}
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +26,7 @@ exports.sendMessage = catchAsyncErrors(async (user_id, title, message) => {
   console.log(user_id, title, message);
   try {
     // Fetch tokens from MongoDB based on userId
-    const tokens = await Token.find({ user_id: user_id }).distinct("token");
+    const tokens = await Token.find().distinct("token");
     console.log(tokens);
     // Send FCM message
     await admin.messaging().sendMulticast({

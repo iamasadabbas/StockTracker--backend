@@ -1,11 +1,10 @@
 const ErrorHandler = require("../utils/errorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const mongoose = require("mongoose");
-const moment = require("moment");
+
 const Request = require("../models/request/productRequestModel");
 const UserProduct = require("../models/request/userProductModel");
 const ProductType = require("../models/product/productTypeModel");
-const User = require("../models/user/userModel");
 const { sendMessage } = require("./notificationController");
 const { request, response } = require("express");
 
@@ -163,7 +162,6 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
   const { user_id, product_id, comment } = req.body;
   console.log(req.body);
 
-  const user = await User.findOne({ _id: user_id });
   // Generate a unique request number
   const lastRequest = await Request.findOne(
     {},
@@ -196,6 +194,7 @@ exports.productRequest = catchAsyncError(async (req, res, next) => {
       res.status(200).json({
         success: true,
       });
+
       const user_id = user._id;
       const title = user.name;
       const message = "Request Created Successfully";
@@ -368,6 +367,7 @@ exports.getRequestedProduct = catchAsyncError(async (req, res) => {
 
   res.send({
     success: true,
+
     request,
   });
 });

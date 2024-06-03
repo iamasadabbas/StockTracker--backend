@@ -4,8 +4,7 @@ const Product = require("../models/product/productModel");
 const ProductType = require("../models/product/productTypeModel");
 const ProductCompany = require("../models/product/productCompanyModel");
 const Location = require("../models/product/locationModel");
-const ProductLocation = require("../models/product/productLocationModel");
-const mongoose = require("mongoose");
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Add Product
@@ -128,30 +127,11 @@ exports.addProductCompany = catchAsyncError(async (req, res, next) => {
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getAllProductById = catchAsyncError(async (req, res, next) => {
   try {
-    const typeId = mongoose.Types.ObjectId(req.params.id); // Convert string to ObjectId
-    console.log("Type ID:", typeId);
-
-    // Aggregate to match products by type_id and populate related fields
-    const product = await ProductLocation.aggregate([
-      {
-        $lookup: {
-          from: "products", // Assuming the collection name is 'products'
-          localField: "product_id",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      { $unwind: "$product" }, // Unwind the populated product array
-      {
-        $match: {
-          "product.type_id": typeId,
-        },
-      },
-    ]);
-
-    console.log("Filtered Products:", product);
-
-    if (product.length === 0) {
+    const id = req.params.id;
+    console.log(id);
+    const product = await Product.find({ type_id: id }).populate("type_id");
+    console.log(product);
+    if (product == "") {
       res.json({ success: false, product: "No Item Found" });
     } else {
       res.status(200).json({
@@ -160,14 +140,11 @@ exports.getAllProductById = catchAsyncError(async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.error("Error:", error);
     res.status(400).json({
       success: false,
-      error: error.message,
     });
   }
 });
-
 exports.getAllProduct = catchAsyncError(async (req, res, next) => {
   try {
     const product = await Product.find();
