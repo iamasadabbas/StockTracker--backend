@@ -20,7 +20,7 @@ const userProductSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["waiting", "delivered", "denied"],
+          enum: ["waiting", "assigned", "denied"],
           default: "waiting",
         },
       },

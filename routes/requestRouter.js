@@ -1,19 +1,22 @@
 const express = require("express");
-const {
-  getProductRequest,
-  productRequest,
-  getRequestByMonth,
-  getRequestCategoryCount,
-  getAllProductRequest,
-  getProductRequestByRequestId,
-  updateRequestStatus,
-  getRequestedProduct,
-  updateUserRequestByIds,
-  getAllUserRequestedproduct,
-  getWaitingProductRequest,
-  productReceiving,
-  getLast7daysProductRequest,
-  getRecentRequestNotification,
+const { 
+    getProductRequest,
+    productRequest,
+    getRequestByMonth,
+    getRequestCategoryCount,
+    getAllProductRequest,
+    getProductRequestByRequestId,
+    updateRequestStatus,
+    getRequestedProduct,
+    updateUserRequestByIds,
+    getAllUserRequestedproduct, 
+    getWaitingProductRequest,
+    productReceiving,
+    getLast7daysProductRequest,
+    getRequestById,
+   getRecentRequestNotification,
+
+
 } = require("../controllers/requestController");
 const router = express.Router();
 
@@ -27,13 +30,16 @@ router.route("/getRequestByMonth/:user").get(getRequestByMonth);
 router.route("/getRequestCategoryCount/:user").get(getRequestCategoryCount);
 router.route("/productRequest").post(productRequest);
 router.route("/getAllUserRequestedProduct").get(getAllUserRequestedproduct);
-router
-  .route("/updateUserRequestedProductById/:request_id/:product_id")
-  .put(updateUserRequestByIds);
-router.route("/productReceiving").post(productReceiving);
-router.route("/requestedProduct/:request_id").get(getRequestedProduct);
-router.route("/getWaitingProductRequest").get(getWaitingProductRequest);
-router.route("/getLast7daysProductRequest").get(getLast7daysProductRequest);
+
+router.route("/updateUserRequestedProductById/:request_id/:product_id").put(updateUserRequestByIds);
+router.route("/productReceiving").post(productReceiving)
+router.route("/requestedProduct/:request_id").get(getRequestedProduct)
+router.route("/getWaitingProductRequest").get(getWaitingProductRequest)
+router.route("/getLast7daysProductRequest").get(getLast7daysProductRequest)
+router.route("/getRequestById/:currentRequestId").get(getRequestById)
 router.route("/getRequestNotification/:id").get(getRecentRequestNotification);
+
+
+
 
 module.exports = router;

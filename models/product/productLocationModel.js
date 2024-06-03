@@ -10,10 +10,10 @@ const productLocationSchema = new mongoose.Schema({
     ref: "Product",
     required: true,
   },
-  company_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Company",
-  },
+  // company_id: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "Company",
+  // },
   quantity: {
     type: Number,
     default: 0,
