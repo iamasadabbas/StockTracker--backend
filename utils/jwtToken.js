@@ -1,21 +1,20 @@
 //create Token
-const sendToken = (user,statusCode,res)=>{
-    const token = user.getJWTToken();
+const sendToken = (user, statusCode, res) => {
+  const token = user.getJWTToken();
 
-    // options for cookies
+  // options for cookies
 
-    const options= {
-        expires:new Date(
-            Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-        ),
-    }
-    res.status(statusCode).cookie("token",token,options).json({
-        success:true,
-        user,
-        token,
-        message:"Login Successfully"
-    })
-}
- 
+  const options = {
+    expires: new Date(
+      Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+    ),
+  };
+  res.status(statusCode).cookie("token", token, options).json({
+    success: true,
+    user,
+    token,
+    message: "Login Successfully",
+  });
+};
 
-module.exports = sendToken
+module.exports = sendToken;
