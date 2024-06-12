@@ -7,10 +7,12 @@ const Role = require("../models/user/roleModel");
 const RoleTask = require("../models/user/roleTaskModel");
 const Department = require("../models/user/departmentModel");
 const designationModel = require("../models/user/designationModel");
-const sendToken=require("../utils/jwtToken")
+const sendToken = require("../utils/jwtToken");
 const Faculty = require("../models/user/facultyModel");
 const { response } = require("express");
 const { sendMessage } = require("./notificationController");
+const ErrorHander = require("../utils/errorHandler");
+const crypto = require("crypto");
 
 //Register User
 //////////////////////////////////////////////////////////////////////////
@@ -70,49 +72,58 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 // Login User
 /////////////////////////////////////////////////////////////////////////////
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
-  const { email, password } = req.body;
-  // console.log(req.body);
+  try {
+    const { email, password } = req.body;
+    console.log(req.body);
 
-  if (!email || !password) {
+    if (!email || !password) {
+      res.json({ success: false, message: "Please Enter Email & Password" });
+    }
 
-    res.json({ success: false, message: "Please Enter Email & Password" });
-  }
+    // Define a regex for validating email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Define a regex for validating email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Validate the email format
+    if (!emailRegex.test(email)) {
+      res.json({ success: false, message: "Invalid email format" });
+    }
 
-  // Validate the email format
-  if (!emailRegex.test(email)) {
-    res.json({ success: false, message: "Invalid email format" });
+    const user = await User.findOne({ email })
+      .select("+password")
+      .populate("role_id")
+      .populate("designation_id");
 
-  }
+    if (!user) {
+      res.json({ success: false, message: "Invalid email or password" });
+    }
 
-  const user = await User.findOne({ email })
-    .select("+password")
-    .populate("role_id")
-    .populate("designation_id");
+    // Correct role check logic
+    if (
+      user.role_id.name !== "Admin" &&
+      user.role_id.name !== "SuperAdmin" &&
+      user.role_id.name !== "StoreKeeper"
+    ) {
+      return next(new ErrorHandler("Invalid Email or password", 401));
+    }
 
-  if (!user) {
-    return next(new ErrorHandler("Invalid email or password", 401));
-  }
-  const validPass = await bcrypt.compare(req.body.password, user.password);
-  if (!validPass) {
-    return next(new ErrorHandler("Invalid Email or password", 401));
-  } else if (user.status !== true) {
-    res.json({
-      success: false,
-      message: "Ask the admin to allow you to login",
-    });
-  } else {
-
-     sendToken(user, 200, res);
-    res.status(200).json({
-      success: true,
-      user,
-      message: "Login Successfully",
-    });
-
-
+    const validPass = await bcrypt.compare(req.body.password, user.password);
+    if (!validPass) {
+      res.json({ success: false, message: "Invalid email or password" });
+    } else if (user.status !== true) {
+      res.json({
+        success: false,
+        message: "Ask the admin to allow you to login",
+      });
+    } else {
+      sendToken(user, 200, res);
+      return res.status(200).json({
+        success: true,
+        user,
+        message: "Login Successfully",
+      });
+    }
+  } catch (error) {
+    console.log(error);
   }
 });
 
@@ -131,7 +142,9 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
   try {
-    const users = await User.find({role_id:{ $ne: null }}).populate("role_id").populate("designation_id");
+    const users = await User.find({ role_id: { $ne: null } })
+      .populate("role_id")
+      .populate("designation_id");
     if (users) {
       res.send({
         status: 200,
@@ -147,25 +160,25 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
 
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
   // console.log('enter');
-  const user = await User.findById(req.user.id).populate("role_id")
+  const user = await User.findById(req.user.id).populate("role_id");
   res.status(200).send({
     status: true,
     user,
   });
 });
+
 exports.getTotalUserCount = catchAsyncErrors(async (req, res, next) => {
   try {
-    const users = await User.find()
-    if(users){
-      const totalUser=users.length
+    const users = await User.find();
+    if (users) {
+      const totalUser = users.length;
       res.send({
-            status: 200,
-            totalUser,
-          });
-    }else {
-        res.send({ status: 200, message: "user not found" });
-      }
-    
+        status: 200,
+        totalUser,
+      });
+    } else {
+      res.send({ status: 200, message: "user not found" });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -189,8 +202,8 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
       const approval = await User.find({
         createdAt: {
           $gte: startOfDay,
-          $lte: endOfDay
-        }
+          $lte: endOfDay,
+        },
       });
       // console.log(`Requests on day ${index}:`, requests.length);
       NoOfApproval.push(approval.length);
@@ -201,17 +214,18 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
       approvalCounts: NoOfApproval.reverse(), // Reverse the array to get the counts in chronological order
     });
   } catch (error) {
-    console.error('Error finding requests:', error);
+    console.error("Error finding requests:", error);
     res.status(500).send({
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 });
+
 exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
   try {
-    const userApprovalRequest = await User.find({ role_id: null })
+    const userApprovalRequest = await User.find({ role_id: null });
     const totalUserApprovalRequest = userApprovalRequest.length;
-    
+
     if (totalUserApprovalRequest > 0) {
       res.send({
         status: 200,
@@ -233,35 +247,33 @@ exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
 
 exports.getTotalActiveUserCount = catchAsyncErrors(async (req, res, next) => {
   try {
-    const users = await User.find({status: true})
-    if(users){
-      const totalActiveUser=users.length
+    const users = await User.find({ status: true });
+    if (users) {
+      const totalActiveUser = users.length;
       // console.log(totalActiveUser);
       res.send({
-            status: 200,
-            totalActiveUser,
-          });
-    }else {
-        res.send({ status: 200, message: "user not found" });
-      }
-    
+        status: 200,
+        totalActiveUser,
+      });
+    } else {
+      res.send({ status: 200, message: "user not found" });
+    }
   } catch (error) {
     console.error(error);
   }
 });
 exports.getTotalRoleCount = catchAsyncErrors(async (req, res, next) => {
   try {
-    const role = await Role.find()
-    if(role){
-      const totalRole=role.length
+    const role = await Role.find();
+    if (role) {
+      const totalRole = role.length;
       res.send({
-            status: 200,
-            totalRole,
-          });
-    }else {
-        res.send({ status: 200, message: "role not found" });
-      }
-    
+        status: 200,
+        totalRole,
+      });
+    } else {
+      res.send({ status: 200, message: "role not found" });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -270,8 +282,10 @@ exports.getRegistartionRequest = catchAsyncErrors(async (req, res, next) => {
   // const name = req.params.roleName;
   // if (name == "SuperAdmin") {
   try {
-    const users = await User.find({role_id:null}).populate("department_id")
-    .populate("designation_id").populate("faculty_id");
+    const users = await User.find({ role_id: null })
+      .populate("department_id")
+      .populate("designation_id")
+      .populate("faculty_id");
     if (users) {
       res.send({
         status: 200,
@@ -571,51 +585,51 @@ exports.updateAssignTask = catchAsyncErrors(async (req, res, next) => {
   }
 });
 exports.updateRole = catchAsyncErrors(async (req, res, next) => {
-  const { userId,roleId } = req.body;
+  const { userId, roleId } = req.body;
 
   let result = await User.findOneAndUpdate(
     {
-      _id:userId
+      _id: userId,
     },
     {
       $set: {
-        "role_id":roleId,
-        "status":true,
+        role_id: roleId,
+        status: true,
       },
     }
-  )
+  );
   if (result) {
-    let user=await User.find({role_id:null})
+    let user = await User.find({ role_id: null });
     return res.send({
-      status:200,
-      message:"Updated Successfully",
-      user
-  });
+      status: 200,
+      message: "Updated Successfully",
+      user,
+    });
   }
-
 });
 exports.updateUserStatus = catchAsyncErrors(async (req, res, next) => {
-  const { userId,status } = req.body;
+  const { userId, status } = req.body;
 
   let result = await User.findOneAndUpdate(
     {
-      _id:userId
+      _id: userId,
     },
     {
       $set: {
-        "status":status,
+        status: status,
       },
     }
-  )
+  );
   if (result) {
-    let user=await User.find({role_id:{ $ne: null }}).populate("role_id").populate("designation_id");
+    let user = await User.find({ role_id: { $ne: null } })
+      .populate("role_id")
+      .populate("designation_id");
     return res.send({
-      status:200,
-      message:"Updated Successfully",
-      user
-  });
+      status: 200,
+      message: "Updated Successfully",
+      user,
+    });
   }
-
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -727,15 +741,14 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
     } else {
       res.status(200).json({
         success: true,
-        message:'user updated successfully',
+        message: "user updated successfully",
         updatedUser,
       });
       const user_id = _id;
-      const title = '';
+      const title = "";
       const message = "Profile Updated Successfully";
       sendMessage(user_id, title, message);
     }
-
   } catch (error) {
     console.log(error);
   }
@@ -745,7 +758,8 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
 // change Password
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.changePassword = catchAsyncErrors(async (req, res, next) => {
-  const { _id, currentPassword, newPassword } = req.body;
+  const { _id, oldPassword, newPassword } = req.body;
+  console.log(_id, oldPassword, newPassword);
 
   // Fetch the user from the database
   const user = await User.findById(_id);
@@ -755,7 +769,7 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Check if the current password provided matches the stored password
-  const isPasswordCorrect = await user.checkPassword(currentPassword);
+  const isPasswordCorrect = await user.checkPassword(oldPassword);
 
   if (!isPasswordCorrect) {
     return res
@@ -775,3 +789,79 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
     .json({ success: true, message: "Password changed successfully" });
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+const sendEmail = require("../utils/sendEmail"); // Adjust the path as necessary
+
+exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
+  // console.log(req.body);
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new ErrorHander("User Not Found", 404));
+  }
+
+  // Get reset password token
+  const resetToken = user.getResetPasswordToken();
+
+  await user.save({ validateBeforeSave: false });
+
+  // Construct the reset password URL
+  const resetPasswordUrl = `${process.env.FRONTEND_URL}/user/password/reset/${resetToken}`;
+
+  const message = `Your Password reset token is: \n\n${resetPasswordUrl}\n\nIf you have not requested this email, please ignore it.`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: `Stock Tracker Password Recovery`,
+      message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Email reset link sent`,
+    });
+  } catch (error) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(new ErrorHander(error.message, 500));
+  }
+});
+
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(
+        new ErrorHander("Reset Password token is invalid or has expired", 400)
+      );
+    }
+
+    if (req.body.password !== req.body.confirmPassword) {
+      return next(new ErrorHander("Password doesn't match", 400));
+    }
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    // For login
+    sendToken(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+});

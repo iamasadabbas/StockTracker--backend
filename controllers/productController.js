@@ -4,65 +4,37 @@ const Product = require("../models/product/productModel");
 const ProductType = require("../models/product/productTypeModel");
 const ProductCompany = require("../models/product/productCompanyModel");
 const Location = require("../models/product/locationModel");
+const ProductLocation = require("../models/product/productLocationModel");
+const mongoose = require("mongoose");
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
   // const { name, specifications, type_id, location_id, description,quantity } = req.body;
-  const { name, specifications, type_id, description } = req.body;
+  const { name, specifications, description, type_id, company_id } = req.body;
+  console.log(req.body);
 
   try {
-    // const alreadyExist=await Product.findOne({name:name})
-    // if(alreadyExist){
-    //   res.send({
-    //     status:409,
-    //     message:"Product Already Exists",
-    //   })
-    // }else {
-
     const product = await Product.create({
       name,
       specifications,
       type_id,
-      // company_id,
+      company_id,
       description,
     });
 
     if (product) {
+      const allProduct = await Product.find()
+        .populate("type_id")
+        .populate("company_id");
       res.send({
         status: 200,
         message: "Product created successfully",
+        allProduct,
       });
     }
-    // }
-
-    // if (product) {
-    //   const productLocation = await ProductLocation.create({
-    //     product_id: product._id,
-    //     location_id: location_id,
-    //     quantity
-    //   });
-
-    // if (productLocation) {
-    //   return res.status(200).json({
-    //     success: true,
-    //     message: "Product added successfully.",
-    //   });
-    // } else {
-    //   return res.status(500).json({
-    //     success: false,
-    //     error: "Failed to add product location.",
-    //   });
-    // }
-    // } else {
-    //   return res.status(500).json({
-    //     success: false,
-    //     error: "Failed to add product.",
-    //   });
-    // }
   } catch (error) {
-    // Handle errors here
     console.error(error);
     return res.status(500).json({
       success: false,
@@ -127,11 +99,30 @@ exports.addProductCompany = catchAsyncError(async (req, res, next) => {
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getAllProductById = catchAsyncError(async (req, res, next) => {
   try {
-    const id = req.params.id;
-    console.log(id);
-    const product = await Product.find({ type_id: id }).populate("type_id");
-    console.log(product);
-    if (product == "") {
+    const typeId = mongoose.Types.ObjectId(req.params.id); // Convert string to ObjectId
+    console.log("Type ID:", typeId);
+
+    // Aggregate to match products by type_id and populate related fields
+    const product = await ProductLocation.aggregate([
+      {
+        $lookup: {
+          from: "products", // Assuming the collection name is 'products'
+          localField: "product_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" }, // Unwind the populated product array
+      {
+        $match: {
+          "product.type_id": typeId,
+        },
+      },
+    ]);
+
+    console.log("Filtered Products:", product);
+
+    if (product.length === 0) {
       res.json({ success: false, product: "No Item Found" });
     } else {
       res.status(200).json({
@@ -140,14 +131,19 @@ exports.getAllProductById = catchAsyncError(async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.error("Error:", error);
     res.status(400).json({
       success: false,
+      error: error.message,
     });
   }
 });
+
 exports.getAllProduct = catchAsyncError(async (req, res, next) => {
   try {
-    const product = await Product.find();
+    const product = await Product.find()
+      .populate("type_id")
+      .populate("company_id");
     if (product == "") {
       res.json({ success: false, product: "No Item Found" });
     } else {

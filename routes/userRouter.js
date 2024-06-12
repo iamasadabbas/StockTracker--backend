@@ -30,6 +30,8 @@ const {
   getUserApprovalRequest,
   getLast7daysUserApproval,
   getUserDetails,
+  forgetPassword,
+  resetPassword,
   logout
 } = require("../controllers/userController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
@@ -88,12 +90,10 @@ router.route("/removeUser/:user_id").delete(removeUser);
 //////////////////////////////////////////////////////////////////////////////////////////////
 router.route("/editTask").put(editTask);
 router.route("/editUser/:user_id").put(editUser);
-router.put(
-  "/editUserDetail",
-  upload.single("avatar"),
-  controller.editUserDetail
-);
+router.route("/editUserDetail").put(upload.single("avatar"), editUserDetail);
 router.route("/changePassword").put(changePassword);
+router.route("/password/forgot").post(forgetPassword);
+router.route("/password/reset/:token").put(resetPassword);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 module.exports = router;
