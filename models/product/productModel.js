@@ -10,14 +10,20 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    description: {
+      type: String,
+    },
     type_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductType",
       required: true,
     },
-    description: {
-      type: String,
+    company_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
     },
+    
   },
   {
     timestamps: true,
