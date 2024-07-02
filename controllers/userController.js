@@ -7,7 +7,7 @@ const Role = require("../models/user/roleModel");
 const RoleTask = require("../models/user/roleTaskModel");
 const Department = require("../models/user/departmentModel");
 const designationModel = require("../models/user/designationModel");
-const sendToken=require("../utils/jwtToken")
+const sendToken = require("../utils/jwtToken");
 const Faculty = require("../models/user/facultyModel");
 const { response } = require("express");
 const { sendMessage } = require("./notificationController");
@@ -129,7 +129,9 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
 /////////////////////////////////////////////////////////////////////////////////////////////
 exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
   try {
-    const users = await User.find({role_id:{ $ne: null }}).populate("role_id").populate("designation_id");
+    const users = await User.find({ role_id: { $ne: null } })
+      .populate("role_id")
+      .populate("designation_id");
     if (users) {
       res.send({
         status: 200,
@@ -145,25 +147,25 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
 
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
   // console.log('enter');
-  const user = await User.findById(req.user.id).populate("role_id")
+  const user = await User.findById(req.user.id).populate("role_id");
   res.status(200).send({
     status: true,
     user,
   });
 });
+
 exports.getTotalUserCount = catchAsyncErrors(async (req, res, next) => {
   try {
-    const users = await User.find()
-    if(users){
-      const totalUser=users.length
+    const users = await User.find();
+    if (users) {
+      const totalUser = users.length;
       res.send({
-            status: 200,
-            totalUser,
-          });
-    }else {
-        res.send({ status: 200, message: "user not found" });
-      }
-    
+        status: 200,
+        totalUser,
+      });
+    } else {
+      res.send({ status: 200, message: "user not found" });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -187,8 +189,8 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
       const approval = await User.find({
         createdAt: {
           $gte: startOfDay,
-          $lte: endOfDay
-        }
+          $lte: endOfDay,
+        },
       });
       // console.log(`Requests on day ${index}:`, requests.length);
       NoOfApproval.push(approval.length);
@@ -199,15 +201,16 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
       approvalCounts: NoOfApproval.reverse(), // Reverse the array to get the counts in chronological order
     });
   } catch (error) {
-    console.error('Error finding requests:', error);
+    console.error("Error finding requests:", error);
     res.status(500).send({
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 });
+
 exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
   try {
-    const userApprovalRequest = await User.find({ role_id: null })
+    const userApprovalRequest = await User.find({ role_id: null });
     const totalUserApprovalRequest = userApprovalRequest.length;
     
     if (totalUserApprovalRequest >= 0) {
@@ -231,35 +234,33 @@ exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
 
 exports.getTotalActiveUserCount = catchAsyncErrors(async (req, res, next) => {
   try {
-    const users = await User.find({status: true})
-    if(users){
-      const totalActiveUser=users.length
+    const users = await User.find({ status: true });
+    if (users) {
+      const totalActiveUser = users.length;
       // console.log(totalActiveUser);
       res.send({
-            status: 200,
-            totalActiveUser,
-          });
-    }else {
-        res.send({ status: 200, message: "user not found" });
-      }
-    
+        status: 200,
+        totalActiveUser,
+      });
+    } else {
+      res.send({ status: 200, message: "user not found" });
+    }
   } catch (error) {
     console.error(error);
   }
 });
 exports.getTotalRoleCount = catchAsyncErrors(async (req, res, next) => {
   try {
-    const role = await Role.find()
-    if(role){
-      const totalRole=role.length
+    const role = await Role.find();
+    if (role) {
+      const totalRole = role.length;
       res.send({
-            status: 200,
-            totalRole,
-          });
-    }else {
-        res.send({ status: 200, message: "role not found" });
-      }
-    
+        status: 200,
+        totalRole,
+      });
+    } else {
+      res.send({ status: 200, message: "role not found" });
+    }
   } catch (error) {
     console.error(error);
   }
@@ -268,8 +269,10 @@ exports.getRegistartionRequest = catchAsyncErrors(async (req, res, next) => {
   // const name = req.params.roleName;
   // if (name == "SuperAdmin") {
   try {
-    const users = await User.find({role_id:null}).populate("department_id")
-    .populate("designation_id").populate("faculty_id");
+    const users = await User.find({ role_id: null })
+      .populate("department_id")
+      .populate("designation_id")
+      .populate("faculty_id");
     if (users) {
       res.send({
         status: 200,
@@ -569,51 +572,51 @@ exports.updateAssignTask = catchAsyncErrors(async (req, res, next) => {
   }
 });
 exports.updateRole = catchAsyncErrors(async (req, res, next) => {
-  const { userId,roleId } = req.body;
+  const { userId, roleId } = req.body;
 
   let result = await User.findOneAndUpdate(
     {
-      _id:userId
+      _id: userId,
     },
     {
       $set: {
-        "role_id":roleId,
-        "status":true,
+        role_id: roleId,
+        status: true,
       },
     }
-  )
+  );
   if (result) {
-    let user=await User.find({role_id:null})
+    let user = await User.find({ role_id: null });
     return res.send({
-      status:200,
-      message:"Updated Successfully",
-      user
-  });
+      status: 200,
+      message: "Updated Successfully",
+      user,
+    });
   }
-
 });
 exports.updateUserStatus = catchAsyncErrors(async (req, res, next) => {
-  const { userId,status } = req.body;
+  const { userId, status } = req.body;
 
   let result = await User.findOneAndUpdate(
     {
-      _id:userId
+      _id: userId,
     },
     {
       $set: {
-        "status":status,
+        status: status,
       },
     }
-  )
+  );
   if (result) {
-    let user=await User.find({role_id:{ $ne: null }}).populate("role_id").populate("designation_id");
+    let user = await User.find({ role_id: { $ne: null } })
+      .populate("role_id")
+      .populate("designation_id");
     return res.send({
-      status:200,
-      message:"Updated Successfully",
-      user
-  });
+      status: 200,
+      message: "Updated Successfully",
+      user,
+    });
   }
-
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -725,15 +728,14 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
     } else {
       res.status(200).json({
         success: true,
-        message:'user updated successfully',
+        message: "user updated successfully",
         updatedUser,
       });
       const user_id = _id;
-      const title = '';
+      const title = "";
       const message = "Profile Updated Successfully";
       sendMessage(user_id, title, message);
     }
-
   } catch (error) {
     console.log(error);
   }

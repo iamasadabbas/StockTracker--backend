@@ -25,26 +25,31 @@ exports.saveToken = catchAsyncErrors(async (req, res, next) => {
 exports.sendMessage = catchAsyncErrors(async (user_id, title, message) => {
   console.log(user_id, title, message);
   try {
-    // Fetch tokens from MongoDB based on userId
-    const tokens = await Token.find().distinct("token");
+    // Fetch tokens from MongoDB based on user_id
+    const tokens = await Token.find({ user_id: user_id }).distinct("token");
     console.log(tokens);
-    // Send FCM message
-    await admin.messaging().sendMulticast({
-      tokens,
-      data: {
-        notifee: JSON.stringify({
-          title: title,
-          body: message,
-          android: {
-            channelId: "default",
-            pressAction: {
-              id: "default",
+
+    if (tokens.length > 0) {
+      // Send FCM message
+      await admin.messaging().sendMulticast({
+        tokens,
+        data: {
+          notifee: JSON.stringify({
+            title: title,
+            body: message,
+            android: {
+              channelId: "default",
+              pressAction: {
+                id: "default",
+              },
+              // Add more Notifee notification options as needed
             },
-            // Add more Notifee notification options as needed
-          },
-        }),
-      },
-    });
+          }),
+        },
+      });
+    } else {
+      console.log("No tokens found for the given user_id");
+    }
   } catch (error) {
     console.log(error);
   }
