@@ -22,6 +22,9 @@ const userProductSchema = new mongoose.Schema(
         received_quantity: {
           type: Number,
         },
+        comment: {
+          type: String,
+        },
         status: {
           type: String,
           enum: ["waiting", "assigned", "denied"],

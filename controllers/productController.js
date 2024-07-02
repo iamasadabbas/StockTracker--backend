@@ -10,59 +10,29 @@ const Location = require("../models/product/locationModel");
 //Add Product
 exports.addProduct = catchAsyncError(async (req, res, next) => {
   // const { name, specifications, type_id, location_id, description,quantity } = req.body;
-  const { name, specifications, type_id, description } = req.body;
+  const { name, specifications,description, type_id, company_id } = req.body;
+  console.log(req.body);
 
   try {
-    // const alreadyExist=await Product.findOne({name:name})
-    // if(alreadyExist){
-    //   res.send({
-    //     status:409,
-    //     message:"Product Already Exists",
-    //   })
-    // }else {
 
     const product = await Product.create({
       name,
       specifications,
       type_id,
-      // company_id,
+      company_id,
       description,
     });
 
     if (product) {
+      const allProduct=await Product.find().populate('type_id').populate('company_id')
       res.send({
         status: 200,
         message: "Product created successfully",
+        allProduct
       });
     }
-    // }
-
-    // if (product) {
-    //   const productLocation = await ProductLocation.create({
-    //     product_id: product._id,
-    //     location_id: location_id,
-    //     quantity
-    //   });
-
-    // if (productLocation) {
-    //   return res.status(200).json({
-    //     success: true,
-    //     message: "Product added successfully.",
-    //   });
-    // } else {
-    //   return res.status(500).json({
-    //     success: false,
-    //     error: "Failed to add product location.",
-    //   });
-    // }
-    // } else {
-    //   return res.status(500).json({
-    //     success: false,
-    //     error: "Failed to add product.",
-    //   });
-    // }
+    
   } catch (error) {
-    // Handle errors here
     console.error(error);
     return res.status(500).json({
       success: false,
@@ -74,11 +44,13 @@ exports.addProduct = catchAsyncError(async (req, res, next) => {
 //Add Product Type
 ///////////////////////////////////////////////////////////////////////////////////////////////
 exports.addProductType = catchAsyncError(async (req, res, next) => {
-  const { name } = req.body;
+  const { productType,typeDescription } = req.body;
+  // console.log(req.body);
 
   try {
     const product = await ProductType.create({
-      name,
+      name:productType,
+      description:typeDescription
     });
     if (product) {
       res.send({ status: 200, message: "Product Type Add Successfully" });
@@ -101,6 +73,7 @@ exports.addProductType = catchAsyncError(async (req, res, next) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 exports.addProductCompany = catchAsyncError(async (req, res, next) => {
   const { name, description } = req.body;
+  // console.log(req.body);
 
   const productTypeExists = await ProductCompany.findOne({ name: name });
   try {
@@ -112,7 +85,7 @@ exports.addProductCompany = catchAsyncError(async (req, res, next) => {
         name,
         description,
       });
-      res.send({ status: 200, message: "Product Type Add Successfully" });
+      res.send({ status: 200, message: "Product Company Add Successfully" });
     }
   } catch (error) {
     console.log(error);
@@ -147,7 +120,7 @@ exports.getAllProductById = catchAsyncError(async (req, res, next) => {
 });
 exports.getAllProduct = catchAsyncError(async (req, res, next) => {
   try {
-    const product = await Product.find();
+    const product = await Product.find().populate('type_id').populate('company_id')
     if (product == "") {
       res.json({ success: false, product: "No Item Found" });
     } else {

@@ -18,8 +18,8 @@ const productRequestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["waiting", "processing", "receiving", "completed", "rejected"],
-      default: "waiting",
+      enum: ["Requested", "Processing", "Pending Approval","Not Acknowledge", "Completed"],
+      default: "Requested",
     },
   },
   {

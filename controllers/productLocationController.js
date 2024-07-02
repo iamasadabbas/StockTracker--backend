@@ -15,7 +15,15 @@ exports.getProductByLocationId = catchAsyncError(async (req, res, next) => {
   try {
     const request = await productLocation
       .find({ location_id: req.params.location_id })
-      .populate("product_id");
+      .populate("product_id")
+      .populate({
+        path: 'product_id',
+        populate: { path: 'type_id' }
+      })
+      .populate({
+        path: 'product_id',
+        populate: { path: 'company_id' }
+      });
     if (request.length != 0) {
       res.send({ status: 200, request });
     }

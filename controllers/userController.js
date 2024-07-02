@@ -11,6 +11,8 @@ const sendToken=require("../utils/jwtToken")
 const Faculty = require("../models/user/facultyModel");
 const { response } = require("express");
 const { sendMessage } = require("./notificationController");
+const ErrorHander =require("../utils/errorHandler")
+const crypto = require('crypto');
 
 //Register User
 //////////////////////////////////////////////////////////////////////////
@@ -70,24 +72,22 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 // Login User
 /////////////////////////////////////////////////////////////////////////////
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
-  const { email, password } = req.body;
-  // console.log(req.body);
+  let { email, password } = req.body;
+
 
   if (!email || !password) {
-
-    res.json({ success: false, message: "Please Enter Email & Password" });
+    return res.json({ success: false, message: "Please Enter Email & Password" });
   }
-
+  email = email.toLowerCase();
   // Define a regex for validating email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   // Validate the email format
   if (!emailRegex.test(email)) {
-    res.json({ success: false, message: "Invalid email format" });
-
+    return res.json({ success: false, message: "Invalid email format" });
   }
 
-  const user = await User.findOne({ email })
+  const user = await User.findOne({ email, status: true })
     .select("+password")
     .populate("role_id")
     .populate("designation_id");
@@ -95,25 +95,23 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
-  const validPass = await bcrypt.compare(req.body.password, user.password);
+
+  // Correct role check logic
+  if (user.role_id.name !== "Admin" && user.role_id.name !== "SuperAdmin" && user.role_id.name !== "StoreKeeper") {
+    return next(new ErrorHandler("Invalid Email or password", 401));
+    }
+
+  const validPass = await bcrypt.compare(password, user.password);
   if (!validPass) {
     return next(new ErrorHandler("Invalid Email or password", 401));
-  } else if (user.status !== true) {
-    res.json({
-      success: false,
-      message: "Ask the admin to allow you to login",
-    });
-  } else {
-
-     sendToken(user, 200, res);
-    res.status(200).json({
-      success: true,
-      user,
-      message: "Login Successfully",
-    });
-
-
   }
+
+  sendToken(user, 200, res);
+  return res.status(200).json({
+    success: true,
+    user,
+    message: "Login Successfully",
+  });
 });
 
 exports.logout = catchAsyncErrors(async (req, res, next) => {
@@ -212,7 +210,7 @@ exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
     const userApprovalRequest = await User.find({ role_id: null })
     const totalUserApprovalRequest = userApprovalRequest.length;
     
-    if (totalUserApprovalRequest > 0) {
+    if (totalUserApprovalRequest >= 0) {
       res.send({
         status: 200,
         totalUserApprovalRequest,
@@ -745,7 +743,8 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
 // change Password
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.changePassword = catchAsyncErrors(async (req, res, next) => {
-  const { _id, currentPassword, newPassword } = req.body;
+  const { _id, oldPassword, newPassword } = req.body;
+  console.log(_id,oldPassword,newPassword);
 
   // Fetch the user from the database
   const user = await User.findById(_id);
@@ -755,7 +754,7 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Check if the current password provided matches the stored password
-  const isPasswordCorrect = await user.checkPassword(currentPassword);
+  const isPasswordCorrect = await user.checkPassword(oldPassword);
 
   if (!isPasswordCorrect) {
     return res
@@ -775,3 +774,83 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
     .json({ success: true, message: "Password changed successfully" });
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+const sendEmail = require('../utils/sendEmail'); // Adjust the path as necessary
+
+exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
+  // console.log(req.body);
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new ErrorHander("User Not Found", 404));
+  }
+
+  // Get reset password token
+  const resetToken = user.getResetPasswordToken();
+
+  await user.save({ validateBeforeSave: false });
+
+  // Construct the reset password URL
+  const resetPasswordUrl = `${process.env.FRONTEND_URL}/user/password/reset/${resetToken}`;
+
+  const message = `Your Password reset token is: \n\n${resetPasswordUrl}\n\nIf you have not requested this email, please ignore it.`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: `Stock Tracker Password Recovery`,
+      message,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Email reset link sent`,
+    });
+  } catch (error) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(new ErrorHander(error.message, 500));
+  }
+});
+
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(
+        new ErrorHander(
+          "Reset Password token is invalid or has expired",
+          400
+        )
+      );
+    }
+
+    if (req.body.password !== req.body.confirmPassword) {
+      return next(new ErrorHander("Password doesn't match", 400));
+    }
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    // For login
+    sendToken(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+});
