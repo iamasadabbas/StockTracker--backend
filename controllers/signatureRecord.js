@@ -89,27 +89,33 @@ exports.getActiveAssistantDirectorSignatureRecord = catchAsyncErrors(async (req,
 });
 exports.updateSignatureRecordStatus = catchAsyncErrors(async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const { status } = req.body;
-        const updatedRecord = await signatureRecord.findByIdAndUpdate(
-            id,
-            { status: status },
-            { new: true, runValidators: true }
-        );
-        if(updatedRecord){
-           const result=await signatureRecord.find()
-           res.send({
-            status:200,
-            result
-           })
-        }
+        const { updatedRecords } = req.body;
 
-        if (!updatedRecord) {
-            return res.status(404).send({
-                status: 404,
-                error: "Signature record not found"
+        // Validate that updatedRecords is an array
+        if (!Array.isArray(updatedRecords)) {
+            return res.status(400).send({
+                status: 400,
+                error: "Invalid data format"
             });
         }
+
+        // Update each record in the database
+        for (const record of updatedRecords) {
+            await signatureRecord.findByIdAndUpdate(
+                record._id,
+                { status: record.status },
+                { new: true, runValidators: true }
+            );
+        }
+
+        // Fetch all records after the update
+        const result = await signatureRecord.find();
+
+        res.status(200).send({
+            status: 200,
+            result
+        });
+
     } catch (error) {
         res.status(500).send({
             status: 500,

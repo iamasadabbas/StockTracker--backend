@@ -28,11 +28,13 @@ const {
   getTotalRoleCount,
   updateRole,
   getUserApprovalRequest,
-  getLast7daysUserApproval,
+  getUserApprovalCountWeek,
+  getUserApprovalCountMonth,
+  getUserApprovalCountYear,
   getUserDetails,
   forgetPassword,
   resetPassword,
-  logout
+  logout,
 } = require("../controllers/userController");
 const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
 const upload = require("../middlewares/ImageUploader");
@@ -77,7 +79,9 @@ router.route("/getTotalUserCount").get(getTotalUserCount);
 router.route("/getTotalActiveUserCount").get(getTotalActiveUserCount);
 router.route("/getTotalRoleCount").get(getTotalRoleCount);
 router.route("/getUserApprovalRequest").get(getUserApprovalRequest);
-router.route("/getLast7daysUserApproval").get(getLast7daysUserApproval);
+router.route("/getUserApprovalCountWeek").get(getUserApprovalCountWeek);
+router.route("/getUserApprovalCountMonth").get(getUserApprovalCountMonth);
+router.route("/getUserApprovalCountYear").get(getUserApprovalCountYear);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

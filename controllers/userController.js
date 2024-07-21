@@ -28,7 +28,6 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
     faculty_id,
     status,
   } = req.body;
-  console.log(req.body);
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
     // Create new user
@@ -43,7 +42,6 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
       gender,
       status,
     });
-    console.log(req.body);
     // Convert email to lowercase
     email = email.toLowerCase();
 
@@ -146,7 +144,6 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
-  // console.log('enter');
   const user = await User.findById(req.user.id).populate("role_id");
   res.status(200).send({
     status: true,
@@ -170,7 +167,7 @@ exports.getTotalUserCount = catchAsyncErrors(async (req, res, next) => {
     console.error(error);
   }
 });
-exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
+exports.getUserApprovalCountWeek = catchAsyncErrors(async (req, res, next) => {
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
@@ -180,11 +177,9 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
     for (let index = 0; index < 7; index++) {
       const startOfDay = new Date(today);
       startOfDay.setUTCDate(today.getUTCDate() - index);
-      // console.log('Start of Day:', startOfDay);
 
       const endOfDay = new Date(startOfDay);
       endOfDay.setUTCHours(23, 59, 59, 999);
-      // console.log('End of Day:', endOfDay);
 
       const approval = await User.find({
         createdAt: {
@@ -207,7 +202,73 @@ exports.getLast7daysUserApproval = catchAsyncErrors(async (req, res, next) => {
     });
   }
 });
+exports.getUserApprovalCountMonth = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
 
+    let NoOfApproval = [];
+
+    for (let index = 0; index < 30; index++) {
+      const startOfDay = new Date(today);
+      startOfDay.setUTCDate(today.getUTCDate() - index);
+
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      const approval = await User.find({
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      });
+      NoOfApproval.push(approval.length);
+    }
+
+    res.send({
+      status: 200,
+      approvalCounts: NoOfApproval.reverse(), // Reverse the array to get the counts in chronological order
+    });
+  } catch (error) {
+    console.error("Error finding requests:", error);
+    res.status(500).send({
+      message: "Internal server error",
+    });
+  }
+});
+exports.getUserApprovalCountYear = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Set to start of the current day in UTC
+
+    let NoOfApproval = new Array(12).fill(0); // Initialize an array for 12 months
+
+    for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
+      // Set the date to the first day of the month
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth() - monthOffset, 1);
+      // Set the date to the last day of the month
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() - monthOffset + 1, 0, 23, 59, 59, 999);
+      const approval = await User.find({
+        createdAt: {
+          $gte: startOfMonth,
+          $lte: endOfMonth,
+        },
+      });
+
+      NoOfApproval[11 - monthOffset] = approval.length;  // Populate the array with counts
+    }
+
+    res.send({
+      status: 200,
+      approvalCounts: NoOfApproval,  // Array of counts for the last 12 months
+    });
+  } catch (error) {
+    console.error("Error finding approvals:", error);
+    res.status(500).send({
+      message: "Internal server error",
+    });
+  }
+});
 exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
   try {
     const userApprovalRequest = await User.find({ role_id: null });
@@ -237,7 +298,6 @@ exports.getTotalActiveUserCount = catchAsyncErrors(async (req, res, next) => {
     const users = await User.find({ status: true });
     if (users) {
       const totalActiveUser = users.length;
-      // console.log(totalActiveUser);
       res.send({
         status: 200,
         totalActiveUser,
@@ -320,7 +380,6 @@ exports.addTask = catchAsyncErrors(async (req, res, next) => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.editTask = catchAsyncErrors(async (req, res, next) => {
   const { _id, name, description } = req.body;
-  // console.log(req.body);
   try {
     const updatedTask = await Task.findByIdAndUpdate(
       _id,
@@ -354,7 +413,6 @@ exports.editTask = catchAsyncErrors(async (req, res, next) => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.getAllTask = catchAsyncErrors(async (req, res, next) => {
   const task = await Task.find();
-  // console.log(task);
   res.send({
     status: 200,
     task,
@@ -397,7 +455,6 @@ exports.addRole = catchAsyncErrors(async (req, res, next) => {
 exports.getRole = catchAsyncErrors(async (req, res, next) => {
   try {
     const role = await Role.find();
-    // console.log(role);
     res.send({ status: 200, role });
   } catch (error) {
     res.error(error.message);
@@ -513,7 +570,6 @@ exports.getFaculty = catchAsyncErrors(async (req, res, next) => {
 exports.assignTask = catchAsyncErrors(async (req, res, next) => {
   const { role_id, task_id } = req.body;
   const lastItem = task_id[task_id.length - 1].task_id;
-  // console.log(lastItem);
 
   try {
     const existingRoleTask = await RoleTask.findOne({ role_id });
@@ -650,19 +706,41 @@ exports.removeUser = catchAsyncErrors(async (req, res, next) => {
 
 //////////Edit User //////////
 exports.editUser = catchAsyncErrors(async (req, res, next) => {
+  const { user_id } = req.params;
   const { name, email, phone_no } = req.body;
-  // console.log(req.params.user_id);
-  // console.log(req.body);
+
   try {
-    await User.updateOne({ name: name, email: email, phone_no: phone_no });
-    res.send({
+    // Update the user and fetch the updated user data in one operation
+    const updatedUser = await User.findByIdAndUpdate(
+      user_id,
+      { name, email, phone_no },
+      { new: true } // This option returns the updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+
+    // Fetch all users after the update
+    const allUser = await User.find({status:true});
+
+    res.status(200).json({
       status: 200,
-      message: "updated successfully",
+      message: "Updated successfully",
+      allUser
     });
   } catch (error) {
     console.error(error);
+    res.status(500).json({
+      status: 500,
+      message: "An error occurred while updating the user",
+    });
   }
 });
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // get Role Task
@@ -712,7 +790,6 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
     email: req.body.email,
   };
   if (req.file && req.file.path) {
-    console.log(req.file.path);
     updatedFields.avatar = req.file.path;
   }
 
@@ -746,7 +823,6 @@ exports.editUserDetail = catchAsyncErrors(async (req, res, next) => {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 exports.changePassword = catchAsyncErrors(async (req, res, next) => {
   const { _id, oldPassword, newPassword } = req.body;
-  console.log(_id,oldPassword,newPassword);
 
   // Fetch the user from the database
   const user = await User.findById(_id);
@@ -781,7 +857,6 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
 const sendEmail = require('../utils/sendEmail'); // Adjust the path as necessary
 
 exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
-  // console.log(req.body);
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {

@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.route("/addSignatureRecord").post(AddSignatureRecord);
 router.route("/getSignatureRecord").get(getSignatureRecord);
-router.route("/updateSignatureRecord/:id").put(updateSignatureRecordStatus);
+router.route("/updateSignatureRecord").put(updateSignatureRecordStatus);
 router.route("/getActiveDirectorSignatureRecord").get(getActiveDirectorSignatureRecord);
 router.route("/getActiveAssistantDirectorSignatureRecord").get(getActiveAssistantDirectorSignatureRecord);
 module.exports = router;

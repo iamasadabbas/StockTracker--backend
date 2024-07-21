@@ -386,13 +386,12 @@ exports.updateUserRequestByIds = async (req, res) => {
       } else {
         // Check for any product with "waiting" status
         for (const item of data[0].request_id.product_id) {
-          if (item.status === "Pending") {
+          if (item.status === "waiting") {
             await Request.findOneAndUpdate(
               { request_id: req.params.request_id },
-              { $set: { status: "processing" } }
+              { $set: { status: "Processing" } }
             );
             partialUpdateMade = true;
-            break; 
             break; 
           }
         }
@@ -429,19 +428,6 @@ exports.updateUserRequestByIds = async (req, res) => {
         res.status(200).send({newData,allRequest});
         }
 
-        if(newData){
-          const allRequest=await Request.find().populate("user_id")
-          .populate({
-            path: "request_id",
-            populate: {
-              path: "product_id._id",
-              model: "Product",
-              populate: { path: "type_id", model: "ProductType" }, // Populate type_id
-            },
-          })
-          .sort({ createdAt: -1 });
-        res.status(200).send({newData,allRequest});
-        }
 
     } else {
       res.status(404).send({ message: "Request not found" });
