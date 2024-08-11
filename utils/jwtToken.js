@@ -1,5 +1,5 @@
 //create Token
-const sendToken = (user,statusCode,res)=>{
+const sendToken = (user,roleTask,statusCode,res)=>{
     const token = user.getJWTToken();
 
     // options for cookies
@@ -12,6 +12,7 @@ const sendToken = (user,statusCode,res)=>{
     res.status(statusCode).cookie("token",token,options).json({
         success:true,
         user,
+        roleTask,
         token,
         message:"Login Successfully"
     })

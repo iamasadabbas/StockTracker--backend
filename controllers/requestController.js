@@ -82,18 +82,11 @@ exports.getAllProductRequest = catchAsyncError(async (req, res, next) => {
       })
       .sort({ createdAt: -1 }); // Sort by date in descending order (newest first)
 
-    if (allRequest.length !== 0) {
       // console.log(request);
       res.status(200).json({
         success: true,
         allRequest,
       });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: "No requests found",
-      });
-    }
   } catch (error) {
     console.log("Error: " + error);
     res.status(500).json({

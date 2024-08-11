@@ -11,8 +11,8 @@ const sendToken = require("../utils/jwtToken");
 const Faculty = require("../models/user/facultyModel");
 const { response } = require("express");
 const { sendMessage } = require("./notificationController");
-const ErrorHander =require("../utils/errorHandler")
-const crypto = require('crypto');
+const ErrorHander = require("../utils/errorHandler");
+const crypto = require("crypto");
 
 //Register User
 //////////////////////////////////////////////////////////////////////////
@@ -72,10 +72,13 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   let { email, password } = req.body;
 
-
   if (!email || !password) {
-    return res.json({ success: false, message: "Please Enter Email & Password" });
+    return res.json({
+      success: false,
+      message: "Please Enter Email & Password",
+    });
   }
+
   email = email.toLowerCase();
   // Define a regex for validating email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -95,21 +98,33 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
   }
 
   // Correct role check logic
-  if (user.role_id.name !== "Admin" && user.role_id.name !== "SuperAdmin" && user.role_id.name !== "StoreKeeper") {
+  if (
+    user.role_id.name !== "Admin" &&
+    user.role_id.name !== "SuperAdmin" &&
+    user.role_id.name !== "StoreKeeper"
+  ) {
     return next(new ErrorHandler("Invalid Email or password", 401));
-    }
+  }
 
   const validPass = await bcrypt.compare(password, user.password);
   if (!validPass) {
     return next(new ErrorHandler("Invalid Email or password", 401));
   }
 
-  sendToken(user, 200, res);
-  return res.status(200).json({
+  //! /////////////////////////////////////////////////////////////
+  const roleTask = await RoleTask.findOne({ role_id: user.role_id }).populate("task_id.task_id");;
+
+  const obj = {
     success: true,
     user,
+    roleTask: roleTask.task_id,  
     message: "Login Successfully",
-  });
+  }
+
+  console.log(obj);
+  
+  sendToken(user,roleTask.task_id, 200, res);
+  return res.status(200).json(obj);
 });
 
 exports.logout = catchAsyncErrors(async (req, res, next) => {
@@ -143,10 +158,16 @@ exports.getAllUser = catchAsyncErrors(async (req, res, next) => {
   }
 });
 
+
+//! /////////////////////////////////////////////////////////
+
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.user.id).populate("role_id");
+
+  const roleTask = await RoleTask.findOne({ role_id: user.role_id }).populate("task_id.task_id");;
   res.status(200).send({
     status: true,
+    roleTask: roleTask.task_id,
     user,
   });
 });
@@ -245,9 +266,21 @@ exports.getUserApprovalCountYear = catchAsyncErrors(async (req, res, next) => {
 
     for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
       // Set the date to the first day of the month
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth() - monthOffset, 1);
+      const startOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() - monthOffset,
+        1
+      );
       // Set the date to the last day of the month
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() - monthOffset + 1, 0, 23, 59, 59, 999);
+      const endOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() - monthOffset + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
       const approval = await User.find({
         createdAt: {
           $gte: startOfMonth,
@@ -255,12 +288,12 @@ exports.getUserApprovalCountYear = catchAsyncErrors(async (req, res, next) => {
         },
       });
 
-      NoOfApproval[11 - monthOffset] = approval.length;  // Populate the array with counts
+      NoOfApproval[11 - monthOffset] = approval.length; // Populate the array with counts
     }
 
     res.send({
       status: 200,
-      approvalCounts: NoOfApproval,  // Array of counts for the last 12 months
+      approvalCounts: NoOfApproval, // Array of counts for the last 12 months
     });
   } catch (error) {
     console.error("Error finding approvals:", error);
@@ -273,7 +306,7 @@ exports.getUserApprovalRequest = catchAsyncErrors(async (req, res, next) => {
   try {
     const userApprovalRequest = await User.find({ role_id: null });
     const totalUserApprovalRequest = userApprovalRequest.length;
-    
+
     if (totalUserApprovalRequest >= 0) {
       res.send({
         status: 200,
@@ -642,11 +675,14 @@ exports.updateRole = catchAsyncErrors(async (req, res, next) => {
     }
   );
   if (result) {
-    let user = await User.find({ role_id: null });
+    let user = await User.find({ role_id: null })
+      .populate("department_id")
+      .populate("designation_id")
+      .populate("faculty_id");
     return res.send({
       status: 200,
-      message: "Updated Successfully",
       user,
+      message: "Updated Successfully",
     });
   }
 });
@@ -725,12 +761,12 @@ exports.editUser = catchAsyncErrors(async (req, res, next) => {
     }
 
     // Fetch all users after the update
-    const allUser = await User.find({status:true});
+    const allUser = await User.find({ status: true });
 
     res.status(200).json({
       status: 200,
       message: "Updated successfully",
-      allUser
+      allUser,
     });
   } catch (error) {
     console.error(error);
@@ -853,8 +889,7 @@ exports.changePassword = catchAsyncErrors(async (req, res, next) => {
 });
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-const sendEmail = require('../utils/sendEmail'); // Adjust the path as necessary
+const sendEmail = require("../utils/sendEmail"); // Adjust the path as necessary
 
 exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
@@ -908,10 +943,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
     if (!user) {
       return next(
-        new ErrorHander(
-          "Reset Password token is invalid or has expired",
-          400
-        )
+        new ErrorHander("Reset Password token is invalid or has expired", 400)
       );
     }
 
